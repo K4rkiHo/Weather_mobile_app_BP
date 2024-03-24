@@ -16,6 +16,7 @@ import androidx.appcompat.app.ActionBarDrawerToggle;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
 import androidx.drawerlayout.widget.DrawerLayout;
+import androidx.recyclerview.widget.ItemTouchHelper;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
@@ -56,15 +57,32 @@ public class DashBoard extends AppCompatActivity {
 
     private RecyclerView recyclerView;
 
+    private List<JsonObjectModel> dataList = new ArrayList<>();
+
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_dash_board);
+        recyclerView = findViewById(R.id.recyclerView);
 
         Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
 
+        // Načtení pořadí z SharedPreferences
+        SharedPreferencesManager.loadOrderFromSharedPreferences(this, dataList);
+
         getDataFromApi();
+
+        // Inicializace RecyclerView
+        recyclerView.setLayoutManager(new LinearLayoutManager(this));
+
+        // Vytvoření a nastavení adaptéru
+        JsonObjectAdapter adapter = new JsonObjectAdapter(dataList);
+        recyclerView.setAdapter(adapter);
+
+        // Inicializace ItemTouchHelper a připojení k RecyclerView
+        ItemTouchHelper itemTouchHelper = new ItemTouchHelper(simpleCallback);
+        itemTouchHelper.attachToRecyclerView(recyclerView);
     }
 
     @Override
@@ -115,44 +133,40 @@ public class DashBoard extends AppCompatActivity {
             reader.close();
             JSONObject units = new JSONObject(unitsJsonString.toString());
 
-            // Vytvoření seznamu pro ukládání objektů
-            List<JsonObjectModel> dataList = new ArrayList<>();
-
             // Procházení klíčů v JSON odpovědi z API
             Iterator<String> keys = apiResponse.keys();
             while (keys.hasNext()) {
                 String key = keys.next();
-                // Získání českého překladu klíče z translate.json souboru
-                if (translations.has(key)) {
-                    String czechKey = translations.getString(key);
-                    // Získání jednotky z units.json souboru
-                    String unit = units.optString(key, "");
-                    // Získání hodnoty z API odpovědi
-                    double value = apiResponse.optDouble(key, 0.0);
-                    // Zaokrouhlení hodnoty na celé číslo
-                    long roundedValue = Math.round(value);
-                    // Vytvoření nového objektu JsonObjectModel a přidání do seznamu
-                    dataList.add(new JsonObjectModel(czechKey, roundedValue + " " + unit, key));
+                // Vyfiltruj klíče, které nechcete zahrnout
+                if (!key.equals("id") && !key.equals("time") && !key.equals("battery_bat") && !key.equals("battery_wh65")) {
+                    // Získání českého překladu klíče z translate.json souboru
+                    if (translations.has(key)) {
+                        String czechKey = translations.getString(key);
+                        // Získání jednotky z units.json souboru
+                        String unit = units.optString(key, "");
+                        // Získání hodnoty z API odpovědi
+                        double value = apiResponse.optDouble(key, 0.0);
+                        // Zaokrouhlení hodnoty na celé číslo
+                        long roundedValue = Math.round(value);
+                        // Vytvoření nového objektu JsonObjectModel a přidání do seznamu
+                        dataList.add(new JsonObjectModel(czechKey, roundedValue + " " + unit, key));
+                    }
                 }
             }
-            // Seskupení karet podle abecedy
-            Collections.sort(dataList, new Comparator<JsonObjectModel>() {
-                @Override
-                public int compare(JsonObjectModel model1, JsonObjectModel model2) {
-                    return model1.getKey().compareToIgnoreCase(model2.getKey());
-                }
-            });
+
             // Inicializace RecyclerView
-            RecyclerView recyclerView = findViewById(R.id.recyclerView);
             recyclerView.setLayoutManager(new LinearLayoutManager(this));
 
             // Vytvoření a nastavení adaptéru
             JsonObjectAdapter adapter = new JsonObjectAdapter(dataList);
             recyclerView.setAdapter(adapter);
+
+            SharedPreferencesManager.saveOrderToSharedPreferences(DashBoard.this, dataList);
         } catch (IOException | JSONException e) {
             e.printStackTrace();
         }
     }
+
     private void getDataFromApi() {
         new Thread(new Runnable() {
             @Override
@@ -200,4 +214,23 @@ public class DashBoard extends AppCompatActivity {
             }
         }).start();
     }
+
+    ItemTouchHelper.SimpleCallback simpleCallback = new ItemTouchHelper.SimpleCallback(ItemTouchHelper.UP | ItemTouchHelper.DOWN | ItemTouchHelper.START | ItemTouchHelper.END, 0) {
+        @Override
+        public boolean onMove(@NonNull RecyclerView recyclerView, @NonNull RecyclerView.ViewHolder viewHolder, @NonNull RecyclerView.ViewHolder target) {
+            int fromPosition = viewHolder.getAdapterPosition();
+            int toPosition = target.getAdapterPosition();
+
+            Collections.swap(dataList, fromPosition, toPosition);
+            recyclerView.getAdapter().notifyItemMoved(fromPosition, toPosition);
+
+            return false;
+        }
+
+        @Override
+        public void onSwiped(@NonNull RecyclerView.ViewHolder viewHolder, int direction) {
+            int position = viewHolder.getAdapterPosition();
+            Toast.makeText(DashBoard.this, "Deleted", Toast.LENGTH_SHORT).show();
+        }
+    };
 }

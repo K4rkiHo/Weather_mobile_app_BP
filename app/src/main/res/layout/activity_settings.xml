@@ -18,7 +18,7 @@
             android:layout_height="wrap_content"
             android:layout_centerInParent="true"
             android:text="Settings"
-            android:textColor="@color/black"
+            android:textColor="@color/white"
             android:textSize="15sp"
             android:textStyle="bold">
 
@@ -48,7 +48,7 @@
                 android:layout_gravity="center"
                 android:layout_marginTop="10dp"
                 android:text="Account"
-                android:textColor="@color/black"
+                android:textColor="@color/white"
                 android:textSize="30sp"
                 android:textStyle="bold" />
 
@@ -78,8 +78,8 @@
                         android:layout_height="wrap_content"
                         android:layout_centerVertical="true"
                         android:textStyle="bold"
-                        android:textColor="@color/black"
-                        android:text="Stay login"
+                        android:textColor="@color/white"
+                        android:text="Keep logged in"
                         android:layout_toEndOf="@+id/locking">
                     </TextView>
                     <Switch
@@ -120,7 +120,7 @@
                         android:layout_height="wrap_content"
                         android:layout_centerVertical="true"
                         android:textStyle="bold"
-                        android:textColor="@color/black"
+                        android:textColor="@color/white"
                         android:text="Units"
                         android:layout_toEndOf="@+id/locking">
                     </TextView>
@@ -152,7 +152,7 @@
                         android:layout_height="wrap_content"
                         android:layout_centerVertical="true"
                         android:textStyle="bold"
-                        android:textColor="@color/black"
+                        android:textColor="@color/white"
                         android:text="API Server"
                         android:layout_toEndOf="@+id/api">
                     </TextView>
@@ -161,7 +161,8 @@
                         android:layout_height="wrap_content"
                         android:layout_alignParentEnd="true"
                         android:layout_centerVertical="true"
-                        android:src="@drawable/arrow_point_to_right">
+                        android:src="@drawable/arrow_point_to_right"
+                        android:onClick="onBackArrowClicked_API">
                     </ImageView>
                 </RelativeLayout>
                 <RelativeLayout
@@ -182,7 +183,7 @@
                         android:layout_height="wrap_content"
                         android:layout_centerVertical="true"
                         android:textStyle="bold"
-                        android:textColor="@color/black"
+                        android:textColor="@color/white"
                         android:text="Language"
                         android:layout_toEndOf="@+id/languange">
                     </TextView>
@@ -192,6 +193,47 @@
                         android:layout_alignParentEnd="true"
                         android:layout_centerVertical="true"
                         android:src="@drawable/arrow_point_to_right">
+                    </ImageView>
+                </RelativeLayout>
+            </LinearLayout>
+            <LinearLayout
+                android:background="@drawable/round_back_white"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="20dp"
+                android:layout_marginEnd="20dp"
+                android:layout_marginTop="40dp"
+                android:orientation="vertical"
+                android:padding="15dp">
+                <RelativeLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content">
+                    <ImageView
+                        android:layout_width="40dp"
+                        android:layout_height="40dp"
+                        android:padding="12dp"
+                        android:src="@drawable/info"
+                        android:id="@+id/about_app"
+                        android:background="@drawable/round_lock_violet">
+                    </ImageView>
+                    <TextView
+                        android:layout_marginStart="20dp"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_centerVertical="true"
+                        android:textStyle="bold"
+                        android:textColor="@color/white"
+                        android:text="About app"
+                        android:layout_toEndOf="@+id/about_app">
+                    </TextView>
+                    <ImageView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_alignParentEnd="true"
+                        android:layout_centerVertical="true"
+                        android:src="@drawable/arrow_point_to_right"
+                        android:onClick="onBackArrowClicked">
+
                     </ImageView>
                 </RelativeLayout>
             </LinearLayout>

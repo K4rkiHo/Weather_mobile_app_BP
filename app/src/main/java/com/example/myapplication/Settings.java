@@ -42,4 +42,9 @@ public class Settings extends AppCompatActivity {
         Intent intent = new Intent(this, Units_settings.class);
         startActivity(intent);
     }
+
+    public void onBackArrowClicked_API(View view) {
+        Intent intent = new Intent(this, API_server.class);
+        startActivity(intent);
+    }
 }

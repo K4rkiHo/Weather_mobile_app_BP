@@ -1,9 +1,11 @@
 package com.example.myapplication;
 
+import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 
 import android.app.ActivityOptions;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.net.wifi.WifiInfo;
@@ -17,6 +19,7 @@ import android.view.animation.DecelerateInterpolator;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
+import android.widget.EditText;
 import android.widget.ListView;
 import android.widget.TextView;
 
@@ -46,6 +49,7 @@ public class IPScan extends AppCompatActivity {
     ArrayList<String> ipAddressesList;
     ArrayAdapter<String> adapter;
     Button refreshButton;
+    private boolean ipAddressFound = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -90,6 +94,14 @@ public class IPScan extends AppCompatActivity {
         }, 5000);
 
          */
+        new Handler().postDelayed(new Runnable() {
+            @Override
+            public void run() {
+                if (!ipAddressFound) {
+                    showManualIpAddressDialog();
+                }
+            }
+        }, 10000); // 10 seconds
         getIpAdress();
         listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
@@ -199,6 +211,7 @@ public class IPScan extends AppCompatActivity {
                     @Override
                     public void run() {
                         addIpAddressToList(apiUrl);
+                        ipAddressFound = true;
                     }
                 });
             }
@@ -230,7 +243,34 @@ public class IPScan extends AppCompatActivity {
             Log.e("IPScan", "Malformed URL: " + url, e);
         }
     }
+    private void showManualIpAddressDialog() {
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setTitle("Manual IP Address Entry");
+        builder.setMessage("Could not automatically find any IP address. Please enter the IP address manually:");
 
+        final EditText input = new EditText(this);
+        builder.setView(input);
+
+        builder.setPositiveButton("OK", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                String manualIpAddress = input.getText().toString();
+                if (!manualIpAddress.isEmpty()) {
+                    saveIpAddressToSharedPreferences(manualIpAddress);
+                    openDetailActivity(manualIpAddress);
+                }
+            }
+        });
+
+        builder.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                // Do nothing
+            }
+        });
+
+        builder.show();
+    }
     private void openDetailActivity(String ipAddress) {
         SharedPreferencesManager.saveIpAddressToSharedPreferences(this, ipAddress);
         Intent intent = new Intent(this, MainActivity.class);

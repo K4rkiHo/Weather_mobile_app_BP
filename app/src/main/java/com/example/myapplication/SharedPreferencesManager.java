@@ -4,6 +4,9 @@ import android.content.Context;
 import android.content.SharedPreferences;
 import android.util.Base64;
 
+import java.util.ArrayList;
+import java.util.List;
+
 public class SharedPreferencesManager {
     private static final String PREF_NAME = "MyPrefs";
     private static final String KEY_IP_ADDRESS = "ipAddress";
@@ -12,6 +15,7 @@ public class SharedPreferencesManager {
     private static final String KEY_STAY_LOGIN = "stay_login";
     private static final String KEY_ENCODED_PASSWORD = "encoded_password";
     private static final String STATION_ID = "station_id";
+    private static final String LIST_ORDER = "list_order";
 
 
     // Uložení IP adresy do SharedPreferences
@@ -87,5 +91,36 @@ public class SharedPreferencesManager {
         SharedPreferences.Editor editor = sharedPreferences.edit();
         editor.putString(STATION_ID, stationId);
         editor.apply();
+    }
+
+    public static void saveOrderToSharedPreferences(Context context, List<JsonObjectModel> dataList) {
+        SharedPreferences sharedPreferences = context.getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE);
+        SharedPreferences.Editor editor = sharedPreferences.edit();
+
+        StringBuilder orderBuilder = new StringBuilder();
+        for (JsonObjectModel item : dataList) {
+            orderBuilder.append(item.getKey()).append(",");
+        }
+        editor.putString(LIST_ORDER, orderBuilder.toString());
+        editor.apply();
+    }
+    public static void loadOrderFromSharedPreferences(Context context, List<JsonObjectModel> dataList) {
+        SharedPreferences sharedPreferences = context.getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE);
+        String order = sharedPreferences.getString(LIST_ORDER, "");
+        String[] orderArray = order.split(",");
+
+        List<JsonObjectModel> orderedList = new ArrayList<>();
+
+        // Naplnění nového seznamu podle uloženého pořadí
+        for (String key : orderArray) {
+            for (JsonObjectModel item : dataList) {
+                if (item.getKey().equals(key)) {
+                    orderedList.add(item);
+                    break;
+                }
+            }
+        }
+        dataList.clear();
+        dataList.addAll(orderedList);
     }
 }

@@ -9,6 +9,18 @@ import android.widget.Button;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.anychart.AnyChart;
+import com.anychart.AnyChartView;
+import com.anychart.chart.common.dataentry.DataEntry;
+import com.anychart.chart.common.dataentry.ValueDataEntry;
+import com.anychart.charts.Cartesian;
+import com.anychart.core.cartesian.series.Line;
+import com.anychart.data.Mapping;
+import com.anychart.data.Set;
+import com.anychart.enums.Anchor;
+import com.anychart.enums.MarkerType;
+import com.anychart.enums.TooltipPositionMode;
+import com.anychart.graphics.vector.Stroke;
 import com.github.mikephil.charting.charts.LineChart;
 import com.github.mikephil.charting.components.AxisBase;
 import com.github.mikephil.charting.components.Description;
@@ -33,6 +45,7 @@ import java.net.URL;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.List;
 
 public class Weather_layout extends AppCompatActivity {
 
@@ -48,6 +61,12 @@ public class Weather_layout extends AppCompatActivity {
     private TextView textViewMax;
     private Button button;
 
+
+    List<DataEntry> seriesData = new ArrayList<>();
+
+    Cartesian cartesian;
+    AnyChartView anyChartView;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -59,14 +78,38 @@ public class Weather_layout extends AppCompatActivity {
         textViewMin = findViewById(R.id.text_min);
         textViewMax = findViewById(R.id.text_max);
 
-        lineChart = findViewById(R.id.lineChart);
-
+        //lineChart = findViewById(R.id.lineChart);
         Intent intent = getIntent();
-
         // Získání předaných dat z intentu
         jsonString = intent.getStringExtra("jsonObject");
         unit = intent.getStringExtra("unit");
         weather = intent.getStringExtra("weather");
+
+        String[] parts = unit.split(" ");
+        String unit_ = parts[1];
+
+
+        anyChartView = findViewById(R.id.any_chart_view);
+        anyChartView.setProgressBar(findViewById(R.id.progress_bar));
+
+        cartesian = AnyChart.line();
+
+        cartesian.animation(true);
+
+        cartesian.padding(10d, 10d, 10d, 10d);
+
+        cartesian.crosshair().enabled(true);
+        cartesian.crosshair()
+                .yLabel(true)
+                .yStroke((Stroke) null, null, null, (String) null, (String) null);
+
+        cartesian.tooltip().positionMode(TooltipPositionMode.POINT);
+
+        cartesian.title(weather);
+
+        cartesian.yAxis(0).title( unit_ );
+        cartesian.xAxis(0).labels().padding(5d, 5d, 5d, 5d);
+
 
         button = findViewById(R.id.button);
         button.setOnClickListener(v -> {
@@ -148,8 +191,12 @@ public class Weather_layout extends AppCompatActivity {
                 // Zaokrouhlení hodnoty na jedno desetinné místo
                 float roundedValue = (Math.round(value * 10.0f) / 10.0f);
 
+                seriesData.add(new CustomWeatherDataEntry(String.valueOf(i) + "h", roundedValue));
+
                 // Přidání nového bodu do seznamu bodů pro graf
                 entries.add(new Entry(i, roundedValue));
+
+
                 // Aktualizace sumy pro výpočet průměru
                 sum += value;
 
@@ -163,6 +210,31 @@ public class Weather_layout extends AppCompatActivity {
             }
             double average = sum / jsonArray.length();
 
+            //new data graph
+            Set set = Set.instantiate();
+            set.data(seriesData);
+            Mapping series1Mapping = set.mapAs("{ x: 'x', value: 'value' }");
+            Line series1 = cartesian.line(series1Mapping);
+            series1.name(weather);
+            series1.hovered().markers().enabled(true);
+            series1.hovered().markers()
+                    .type(MarkerType.CIRCLE)
+                    .size(4d);
+            series1.tooltip()
+                    .position("right")
+                    .anchor(Anchor.LEFT_CENTER)
+                    .offsetX(5d)
+                    .offsetY(5d);
+
+            cartesian.legend().enabled(true);
+            cartesian.legend().fontSize(18d);
+            cartesian.legend().padding(0d, 0d, 10d, 0d);
+
+            cartesian.xScroller(true);
+
+            anyChartView.setChart(cartesian);
+
+            /*
             // Vytvoření datové sady pro graf
             LineDataSet dataSet = new LineDataSet(entries, weather);
             dataSet.setColor(getResources().getColor(R.color.colorPrimary));
@@ -224,9 +296,18 @@ public class Weather_layout extends AppCompatActivity {
             //textViewMax.setText("Max: " + String.format("%.1f", max) + " " + unit);
             //dej mi všechny hodnoty do textViewAverage
 
+             */
+
         } catch (JSONException e) {
             e.printStackTrace();
             Toast.makeText(this, "Error processing JSON response", Toast.LENGTH_SHORT).show();
         }
+    }
+
+    private class CustomWeatherDataEntry extends ValueDataEntry {
+        CustomWeatherDataEntry(String x, Number value) {
+            super(x, value);
+        }
+
     }
 }

@@ -15,7 +15,7 @@
   "rain_weekly_in": "in",
   "rain_yearly_in": "in",
   "solar_radiation_Wm2": "W/m^2",
-  "solar_uv": "",
+  "solar_uv": "index",
   "temp_ch1_F": "°F",
   "temp_humidity_percent": "%",
   "time": "",
