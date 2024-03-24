@@ -2,6 +2,7 @@ package com.example.myapplication;
 
 import androidx.appcompat.app.AppCompatActivity;
 
+import android.graphics.Color;
 import android.os.Bundle;
 import android.util.Log;
 import android.widget.Button;
@@ -33,9 +34,7 @@ public class API_server extends AppCompatActivity {
 
     private TextView ip_add;
     private TextView status;
-
     private TextView info_api_test;
-
     private Button test_api;
     private ImageView statusImage;
 
@@ -52,6 +51,7 @@ public class API_server extends AppCompatActivity {
         statusImage = findViewById(R.id.status_image);
 
         getAPIStatus();
+
         test_api.setOnClickListener(v -> {
             getAPITests();
         });
@@ -60,49 +60,49 @@ public class API_server extends AppCompatActivity {
 
     private void getAPITests() {
         new Thread(new Runnable() {
-        @Override
-        public void run() {
-            // Získání uložené IP adresy z SharedPreferences
-            String ipAddress = SharedPreferencesManager.getIpAddressFromSharedPreferences(API_server.this);
-            String apiUrl = "http://" + ipAddress + ":5000/api/test/run_all_tests";
+            @Override
+            public void run() {
+                // Získání uložené IP adresy z SharedPreferences
+                String ipAddress = SharedPreferencesManager.getIpAddressFromSharedPreferences(API_server.this);
+                String apiUrl = "http://" + ipAddress + ":5000/api/test/run_all_tests";
 
-            // Odeslání požadavku na server
-            try {
-                URL url = new URL(apiUrl);
-                HttpURLConnection connection = (HttpURLConnection) url.openConnection();
-                connection.setRequestMethod("GET");
+                // Odeslání požadavku na server
+                try {
+                    URL url = new URL(apiUrl);
+                    HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+                    connection.setRequestMethod("GET");
 
-                // Přidání "Bearer token" do hlavičky požadavku
-                String accessToken = SharedPreferencesManager.getAccessTokenFromSharedPreferences(API_server.this);
-                connection.setRequestProperty("Authorization", "Bearer " + accessToken);
+                    // Přidání "Bearer token" do hlavičky požadavku
+                    String accessToken = SharedPreferencesManager.getAccessTokenFromSharedPreferences(API_server.this);
+                    connection.setRequestProperty("Authorization", "Bearer " + accessToken);
 
-                // Přečtení odpovědi od serveru
-                InputStream inputStream = connection.getInputStream();
-                BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream));
-                StringBuilder response = new StringBuilder();
-                String line;
-                while ((line = reader.readLine()) != null) {
-                    response.append(line);
-                }
-                reader.close();
-
-                // Zpracování odpovědi
-                final String jsonResponse = response.toString();
-
-                runOnUiThread(new Runnable() {
-                    @Override
-                    public void run() {
-                        processJsonResponseTestApi(jsonResponse);
+                    // Přečtení odpovědi od serveru
+                    InputStream inputStream = connection.getInputStream();
+                    BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream));
+                    StringBuilder response = new StringBuilder();
+                    String line;
+                    while ((line = reader.readLine()) != null) {
+                        response.append(line);
                     }
-                });
+                    reader.close();
 
-                // Uzavření spojení
-                connection.disconnect();
-            } catch (IOException e) {
-                e.printStackTrace();
+                    // Zpracování odpovědi
+                    final String jsonResponse = response.toString();
+
+                    runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            processJsonResponseTestApi(jsonResponse);
+                        }
+                    });
+
+                    // Uzavření spojení
+                    connection.disconnect();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
             }
-        }
-    }).start();
+        }).start();
     }
 
     private void getAPIStatus() {
@@ -184,8 +184,14 @@ public class API_server extends AppCompatActivity {
 
             if (valid_token == 1) {
                 statusImage.setImageResource(R.drawable.green);
+                test_api.setEnabled(true);
+                test_api.setClickable(true);
+
             } else {
                 statusImage.setImageResource(R.drawable.red);
+                test_api.setEnabled(false);
+                test_api.setClickable(false);
+                test_api.setAlpha(0.5f);
             }
 
 
