@@ -21,6 +21,8 @@ import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ListView;
+import android.widget.RadioButton;
+import android.widget.RadioGroup;
 import android.widget.TextView;
 
 import com.airbnb.lottie.LottieAnimationView;
@@ -50,6 +52,8 @@ public class IPScan extends AppCompatActivity {
     ArrayAdapter<String> adapter;
     Button refreshButton;
     private boolean ipAddressFound = false;
+
+    private SharedPreferences sharedPreferences;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -103,6 +107,7 @@ public class IPScan extends AppCompatActivity {
             }
         }, 10000); // 10 seconds
         getIpAdress();
+        setupUnitConversion();
         listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
@@ -290,5 +295,30 @@ public class IPScan extends AppCompatActivity {
     }
     private void saveIpAddressToSharedPreferences(String ipAddress) {
         SharedPreferencesManager.saveIpAddressToSharedPreferences(this, ipAddress);
+    }
+
+    private void setupUnitConversion() {
+        SharedPreferences sharedPreferences = getSharedPreferences("unit_settings", Context.MODE_PRIVATE);
+
+        if (!sharedPreferences.getAll().isEmpty()) {
+            return; // Pokud nejsou prázdné, vrátíme se zpět
+        }
+
+        SharedPreferences.Editor editor = sharedPreferences.edit();
+        editor.putString("unit___temp", "°F");
+        editor.putString("unit___rain", "in");
+        editor.putString("unit___press", "inHg");
+        editor.putString("unit___solar", "W/m²");
+        editor.putString("unit___wind", "mph");
+        editor.putString("unit___angle", "°");
+
+        editor.putInt("radioBtnsolar", 2131231278);
+        editor.putInt("radioBtntemp", 2131231279);
+        editor.putInt("radioBtnrain", 2131231287);
+        editor.putInt("radioBtnwind", 2131231289);
+        editor.putInt("radioBtnhum", 2131231275);
+        editor.putInt("radioBtnpress", 2131231276);
+
+        editor.apply();
     }
 }

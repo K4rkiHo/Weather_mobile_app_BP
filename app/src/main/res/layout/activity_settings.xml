@@ -69,8 +69,9 @@
                         android:layout_height="40dp"
                         android:padding="12dp"
                         android:src="@drawable/lock"
-                        android:id="@+id/locking"
-                        android:background="@drawable/round_lock_violet">
+                        android:id="@+id/locking_"
+                        android:background="@drawable/round_lock_violet"
+                        tools:ignore="DuplicateIds">
                     </ImageView>
                     <TextView
                         android:layout_marginStart="20dp"
@@ -80,10 +81,43 @@
                         android:textStyle="bold"
                         android:textColor="@color/white"
                         android:text="Keep logged in"
-                        android:layout_toEndOf="@+id/locking">
+                        android:layout_toEndOf="@+id/locking_">
                     </TextView>
                     <Switch
                         android:id="@+id/stay_login_switch"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_alignParentEnd="true"
+                        android:layout_centerVertical="true"
+                        android:switchMinWidth="50dp"
+                        android:theme="@style/nightModeSwitch">
+                    </Switch>
+                </RelativeLayout>
+
+                <RelativeLayout
+                    android:layout_marginTop="10dp"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content">
+                    <ImageView
+                        android:layout_width="40dp"
+                        android:layout_height="40dp"
+                        android:padding="12dp"
+                        android:src="@drawable/baseline_apps_24"
+                        android:id="@+id/base"
+                        android:background="@drawable/round_lock_violet">
+                    </ImageView>
+                    <TextView
+                        android:layout_marginStart="20dp"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_centerVertical="true"
+                        android:textStyle="bold"
+                        android:textColor="@color/white"
+                        android:text="GridLayout"
+                        android:layout_toEndOf="@+id/base">
+                    </TextView>
+                    <Switch
+                        android:id="@+id/grid_layout_switch"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_alignParentEnd="true"

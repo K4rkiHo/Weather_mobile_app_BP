@@ -160,6 +160,7 @@ public class MainActivity extends AppCompatActivity {
         Intent intent = new Intent(this, SignUP.class);
         Bundle bundle = ActivityOptions.makeSceneTransitionAnimation(this).toBundle();
         startActivity(intent, bundle);
+        finish();
     }
 
     public void openDashboardActivity() {

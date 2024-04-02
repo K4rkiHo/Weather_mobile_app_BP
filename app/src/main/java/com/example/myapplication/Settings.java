@@ -2,6 +2,7 @@ package com.example.myapplication;
 
 import androidx.appcompat.app.AppCompatActivity;
 
+import android.app.ActivityOptions;
 import android.content.Intent;
 import android.os.Bundle;
 import android.view.View;
@@ -36,6 +37,18 @@ public class Settings extends AppCompatActivity {
             }
         });
 
+    }
+
+    @Override
+    public void onBackPressed() {
+        // Zavolání aktivity DashBoard při stisku tlačítka "zpět"
+        super.onBackPressed();
+        Intent intent = new Intent(this, DashBoard.class);
+        Bundle bundle = ActivityOptions.makeSceneTransitionAnimation(this).toBundle();
+        startActivity(intent, bundle);
+
+        // Ukončení aktuální aktivity nastavení
+        finish();
     }
 
     public void onBackArrowClicked(View view) {

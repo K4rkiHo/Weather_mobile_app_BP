@@ -64,6 +64,7 @@ public class History_data extends AppCompatActivity {
         adapter = new ArrayAdapter<String>(this, R.layout.history_item, historyData);
 
         autoCompleteTextView.setAdapter(adapter);
+        autoCompleteTextView.setThreshold(1);
         autoCompleteTextView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {

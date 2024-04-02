@@ -2,64 +2,91 @@ package com.example.myapplication;
 
 import androidx.appcompat.app.AppCompatActivity;
 
-import android.content.Context;
 import android.content.SharedPreferences;
 import android.os.Bundle;
-import android.widget.ListView;
-
-import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
-
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Set;
+import android.widget.RadioButton;
+import android.widget.RadioGroup;
 
 public class Units_settings extends AppCompatActivity {
-    private ListView listView;
-    private List<UnitItem> unitItemList = new ArrayList<>();
+
+    private SharedPreferences sharedPreferences;
+    private static final String[] GROUP_KEYS = {"temp", "press", "wind", "rain", "solar", "hum"};
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_units_settings);
 
-        listView = findViewById(R.id.listviewunits);
+        // Inicializace SharedPreferences
+        sharedPreferences = getSharedPreferences("unit_settings", MODE_PRIVATE);
 
-        loadUnitsFromJson();
-        UnitsAdapter adapter = new UnitsAdapter(this, R.layout.item_unit, unitItemList);
-        listView.setAdapter(adapter);
+        // Načtení uloženého stavu radio tlačítek a nastavení jejich stavu
+        loadRadioButtonsState();
+
+        // Nastavení posluchačů pro změnu stavu radio tlačítek
+        RadioGroup.OnCheckedChangeListener radioGroupListener = new RadioGroup.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(RadioGroup group, int checkedId) {
+                saveRadioButtonsState();
+                handleUnitConversion(group, checkedId);
+            }
+        };
+
+        // Přiřazení posluchačů k radio tlačítkům
+        for (String groupKey : GROUP_KEYS) {
+            RadioGroup radioGroup = findViewById(getResources().getIdentifier("radioGroup_" + groupKey.toLowerCase(), "id", getPackageName()));
+            radioGroup.setOnCheckedChangeListener(radioGroupListener);
+        }
+
+        // Testování výběru tlačítek a jejich jednotek
+        //testSelectedUnits();
     }
-    private void loadUnitsFromJson() {
-        try {
-            StringBuilder stringBuilder = new StringBuilder();
-            InputStream translateStream = getResources().openRawResource(R.raw.units);
-            BufferedReader reader = new BufferedReader(new InputStreamReader(translateStream));
-            String line;
-            while ((line = reader.readLine()) != null) {
-                stringBuilder.append(line);
-            }
-            reader.close();
 
-            JSONObject jsonObject = new JSONObject(stringBuilder.toString());
-            Set<String> addedUnits = new HashSet<>();
-            Iterator<String> keys = jsonObject.keys();
-            while (keys.hasNext()) {
-                String key = keys.next();
-                String value = jsonObject.getString(key);
-                boolean switchState = false;
-                if (!value.isEmpty() && !addedUnits.contains(value)) {
-                    unitItemList.add(new UnitItem(key, value, switchState));
-                    addedUnits.add(value);
-                }
-            }
-        } catch (IOException | JSONException e) {
-            e.printStackTrace();
+    // Uloží stav vybraných radio tlačítek do SharedPreferences
+    private void saveRadioButtonsState() {
+        SharedPreferences.Editor editor = sharedPreferences.edit();
+        for (String groupKey : GROUP_KEYS) {
+            int checkedId = ((RadioGroup) findViewById(getResources().getIdentifier("radioGroup_" + groupKey.toLowerCase(), "id", getPackageName()))).getCheckedRadioButtonId();
+            editor.putInt("radioBtn" + groupKey, checkedId);
+        }
+        editor.apply();
+    }
+
+    // Načte uložený stav radio tlačítek a nastaví jejich stav
+    private void loadRadioButtonsState() {
+        for (String groupKey : GROUP_KEYS) {
+            int checkedId = sharedPreferences.getInt("radioBtn" + groupKey, getResources().getIdentifier("radioBtn1_" + groupKey.toLowerCase(), "id", getPackageName()));
+            ((RadioGroup) findViewById(getResources().getIdentifier("radioGroup_" + groupKey.toLowerCase(), "id", getPackageName()))).check(checkedId);
+        }
+    }
+
+    // Uloží vybrané jednotky do SharedPreferences
+    private void handleUnitConversion(RadioGroup group, int checkedId) {
+        RadioButton checkedRadioButton = findViewById(checkedId);
+        String selectedUnit = checkedRadioButton.getText().toString();
+        String groupKey = getGroupKey(group.getId());
+        SharedPreferences.Editor editor = sharedPreferences.edit();
+        editor.putString("unit__" + groupKey.toLowerCase(), selectedUnit);
+        editor.apply();
+
+        System.out.println("Selected " + groupKey + " unit: " + selectedUnit);
+    }
+
+    // Získá klíč skupiny podle ID radio tlačítka
+    private String getGroupKey(int radioGroupId) {
+        String idString = getResources().getResourceEntryName(radioGroupId);
+        return idString.substring(10); // Oříznutí prefixu "radioGroup_"
+    }
+
+    // Testování výběru tlačítek a jejich jednotek
+    private void testSelectedUnits() {
+        for (String groupKey : GROUP_KEYS) {
+            int checkedId = sharedPreferences.getInt("radioBtn" + groupKey, getResources().getIdentifier("radioBtn1_" + groupKey.toLowerCase(), "id", getPackageName()));
+            RadioButton radioButton = findViewById(checkedId);
+            String selectedUnit = sharedPreferences.getString("unit__" + groupKey.toLowerCase(), "");
+            String selectedButton = radioButton.getText().toString();
+            System.out.println("Selected " + groupKey + " button: " + selectedButton);
+            System.out.println("Selected " + groupKey + " unit: " + selectedUnit);
         }
     }
 }

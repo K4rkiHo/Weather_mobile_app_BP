@@ -54,6 +54,9 @@ public class Weather_layout extends AppCompatActivity {
     private String jsonString;
     private String unit;
     private String weather;
+    private String convert_unit;
+
+    private String original_unit;
     private LineChart lineChart;
 
     private TextView textViewAverage;
@@ -66,6 +69,8 @@ public class Weather_layout extends AppCompatActivity {
 
     Cartesian cartesian;
     AnyChartView anyChartView;
+
+    private UnitConverter unitConverter = new UnitConverter();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -84,9 +89,14 @@ public class Weather_layout extends AppCompatActivity {
         jsonString = intent.getStringExtra("jsonObject");
         unit = intent.getStringExtra("unit");
         weather = intent.getStringExtra("weather");
+        convert_unit = intent.getStringExtra("convert_unit");
+        original_unit = intent.getStringExtra("original_unit");
 
-        String[] parts = unit.split(" ");
-        String unit_ = parts[1];
+        System.out.println("JsonObject: " + jsonString);
+
+        //String[] parts = unit.split(" ");
+        //parts[1]
+        String unit_ = unit;
 
 
         anyChartView = findViewById(R.id.any_chart_view);
@@ -105,7 +115,7 @@ public class Weather_layout extends AppCompatActivity {
 
         cartesian.tooltip().positionMode(TooltipPositionMode.POINT);
 
-        cartesian.title(weather);
+        //cartesian.title(weather);
 
         cartesian.yAxis(0).title( unit_ );
         cartesian.xAxis(0).labels().padding(5d, 5d, 5d, 5d);
@@ -191,7 +201,9 @@ public class Weather_layout extends AppCompatActivity {
                 // Zaokrouhlení hodnoty na jedno desetinné místo
                 float roundedValue = (Math.round(value * 10.0f) / 10.0f);
 
-                seriesData.add(new CustomWeatherDataEntry(String.valueOf(i) + "h", roundedValue));
+                double convertedValue = unitConverter.convertValueToSavedUnit(value, original_unit, convert_unit);
+
+                seriesData.add(new CustomWeatherDataEntry(String.valueOf(i) + "h", Math.round(convertedValue)));
 
                 // Přidání nového bodu do seznamu bodů pro graf
                 entries.add(new Entry(i, roundedValue));
@@ -226,77 +238,13 @@ public class Weather_layout extends AppCompatActivity {
                     .offsetX(5d)
                     .offsetY(5d);
 
-            cartesian.legend().enabled(true);
+            //cartesian.legend().enabled(true);
             cartesian.legend().fontSize(18d);
             cartesian.legend().padding(0d, 0d, 10d, 0d);
 
             cartesian.xScroller(true);
 
             anyChartView.setChart(cartesian);
-
-            /*
-            // Vytvoření datové sady pro graf
-            LineDataSet dataSet = new LineDataSet(entries, weather);
-            dataSet.setColor(getResources().getColor(R.color.colorPrimary));
-            dataSet.setCircleColor(getResources().getColor(R.color.colorPrimary));
-            dataSet.setValueTextColor(getResources().getColor(R.color.colorPrimaryDark));
-            dataSet.setLineWidth(2f);
-            dataSet.setCircleRadius(4f);
-            dataSet.setDrawCircleHole(false);
-            dataSet.setValueTextSize(12f);
-
-            // Vytvoření datového objektu pro graf
-            ArrayList<ILineDataSet> dataSets = new ArrayList<>();
-            dataSets.add(dataSet);
-
-            // Vytvoření datové struktury pro graf
-            LineData lineData = new LineData(dataSets);
-
-            // Nastavení dat do grafu
-            lineChart.setData(lineData);
-
-            // Nastavení formátu popisu osy X
-            XAxis xAxis = lineChart.getXAxis();
-            xAxis.setPosition(XAxis.XAxisPosition.BOTTOM);
-            xAxis.setGranularity(1f);
-            xAxis.setValueFormatter(new ValueFormatter() {
-                @Override
-                public String getAxisLabel(float value, AxisBase axis) {
-                    DecimalFormat decimalFormat = new DecimalFormat("#.#");
-                    return decimalFormat.format(value);
-                }
-            });
-
-            // Popis osy Y
-            YAxis leftAxis = lineChart.getAxisLeft();
-            leftAxis.setValueFormatter(new ValueFormatter() {
-                @Override
-                public String getFormattedValue(float value) {
-                    DecimalFormat df = new DecimalFormat("#.#"); // formátování na jeden desetinný bod
-                    return df.format(value);
-                }
-            });
-
-            // Zakázání popisu osy Y na pravé straně
-            lineChart.getAxisRight().setEnabled(false);
-
-            // Nastavení popisu grafu
-            Description description = new Description();
-            description.setText("");
-            lineChart.setDescription(description);
-
-            // Aktualizace grafu
-            lineChart.invalidate();
-
-
-            String[] parts = unit.split(" ");
-            String unit_ = parts[1];
-            textViewAverage.setText("Average: " + String.format("%.1f", average) + " " + unit_ + "\n" + "Min: " + String.format("%.1f", min) + " " + unit_ + "\n" + "Max: " + String.format("%.1f", max) + " " + unit_ );
-            //textViewMin.setText("Min: " + String.format("%.1f", min) + " " + unit);
-            //textViewMax.setText("Max: " + String.format("%.1f", max) + " " + unit);
-            //dej mi všechny hodnoty do textViewAverage
-
-             */
 
         } catch (JSONException e) {
             e.printStackTrace();
@@ -309,5 +257,11 @@ public class Weather_layout extends AppCompatActivity {
             super(x, value);
         }
 
+    }
+
+    @Override
+    public void onBackPressed() {
+        super.onBackPressed();
+        finish();
     }
 }

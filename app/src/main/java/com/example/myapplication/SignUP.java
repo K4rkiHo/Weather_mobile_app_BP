@@ -51,8 +51,7 @@ public class SignUP extends AppCompatActivity {
                 sendRegisterRequest(SignUP.this, username, password, station_id);
             }
         });
-
-
+        finish();
     }
 
 
@@ -147,6 +146,7 @@ public class SignUP extends AppCompatActivity {
                 Intent intent = new Intent(SignUP.this, DashBoard.class);
                 Bundle bundle = ActivityOptions.makeSceneTransitionAnimation(SignUP.this).toBundle();
                 startActivity(intent, bundle);
+                finish();
             }
         });
     }

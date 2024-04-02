@@ -33,6 +33,9 @@ public class JsonObjectAdapter extends RecyclerView.Adapter<JsonObjectAdapter.Js
         JsonObjectModel model = dataList.get(position);
         holder.keyTextView.setText(model.getKey());
         holder.valueTextView.setText(model.getValue());
+        holder.minTextView.setText(model.getMin());
+        holder.maxTextView.setText(model.getMax());
+        holder.avgTextView.setText(model.getAvg());
 
         holder.itemView.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -41,7 +44,9 @@ public class JsonObjectAdapter extends RecyclerView.Adapter<JsonObjectAdapter.Js
                 Intent intent = new Intent(v.getContext(), Weather_layout.class);
                 intent.putExtra("weather", model.getKey());
                 intent.putExtra("jsonObject", model.getDefaultValue());
-                intent.putExtra("unit", model.getValue()); // Přidání názvu karty
+                intent.putExtra("unit", model.getValue());
+                intent.putExtra("convert_unit", model.getUnit());
+                intent.putExtra("original_unit", model.getOriginalUnit());
 
                 v.getContext().startActivity(intent);
             }
@@ -57,10 +62,17 @@ public class JsonObjectAdapter extends RecyclerView.Adapter<JsonObjectAdapter.Js
         TextView keyTextView;
         TextView valueTextView;
 
+        TextView minTextView;
+        TextView maxTextView;
+        TextView avgTextView;
+
         public JsonObjectViewHolder(@NonNull View itemView) {
             super(itemView);
             keyTextView = itemView.findViewById(R.id.keyTextView);
             valueTextView = itemView.findViewById(R.id.valueTextView);
+            minTextView = itemView.findViewById(R.id.minTextView);
+            maxTextView = itemView.findViewById(R.id.maxTextView);
+            avgTextView = itemView.findViewById(R.id.avgTextView);
         }
     }
 
