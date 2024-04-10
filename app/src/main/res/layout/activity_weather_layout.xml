@@ -5,6 +5,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     tools:context=".Weather_layout"
+    android:id="@+id/constantLayout"
     android:background="@drawable/mountain3">
 
     <TextView
@@ -20,6 +21,20 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintVertical_bias="0.023" />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="match_parent"
+        android:text="No data available"
+        android:textSize="20dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        android:id="@+id/date"
+        >
+    </TextView>
+
 
     <androidx.cardview.widget.CardView
         android:id="@+id/cardView"
@@ -49,61 +64,87 @@
 
     </androidx.cardview.widget.CardView>
 
-
     <Button
         android:id="@+id/button"
-        android:layout_width="193dp"
+        android:layout_width="0dp"
         android:layout_height="72dp"
-        android:text="Historická data"
+        android:text="History data"
         app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintEnd_toStartOf="@id/button_calendar"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintVertical_bias="0.889">
-
+        app:layout_constraintVertical_bias="0.889"
+        android:layout_marginEnd="8dp"
+        android:layout_marginBottom="8dp">
     </Button>
 
-    <TextView
-        android:id="@+id/text_min"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text=""
+    <Button
+        android:id="@+id/button_calendar"
+        android:layout_width="0dp"
+        android:layout_height="72dp"
+        android:text="Pick calendar data"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.834"
-        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintStart_toEndOf="@id/button"
         app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintVertical_bias="0.963"
-        android:textColor="@color/white">
-    </TextView>
+        app:layout_constraintVertical_bias="0.889"
+        android:layout_marginStart="8dp"
+        android:layout_marginEnd="8dp"
+        android:layout_marginBottom="8dp">
+    </Button>
 
-    <TextView
-        android:id="@+id/text_max"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text=""
-        app:layout_constraintBottom_toBottomOf="parent"
+    <androidx.cardview.widget.CardView
+        android:id="@+id/cardView2"
+        android:layout_width="match_parent"
+        android:layout_height="50dp"
+        android:layout_margin="8dp"
+        app:cardCornerRadius="16dp"
+        app:cardBackgroundColor="@color/violet"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.146"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintVertical_bias="0.963"
-        android:textColor="@color/white">
+        app:layout_constraintTop_toBottomOf="@id/button">
 
-    </TextView>
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:layout_gravity="center">
 
-    <TextView
-        android:id="@+id/text_avg"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Průměrná"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.498"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintVertical_bias="0.963"
-        android:textColor="@color/white">
+            <TextView
+                android:id="@+id/text_min"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="MIN"
+                android:textColor="@color/white"
+                android:textSize="20dp"
+                android:gravity="center"/>
 
-    </TextView>
+            <TextView
+                android:id="@+id/text_max"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="MAX"
+                android:textColor="@color/white"
+                android:textSize="20dp"
+                android:gravity="center"/>
+
+            <TextView
+                android:id="@+id/text_avg"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="AVG"
+                android:textColor="@color/white"
+                android:textSize="20dp"
+                android:gravity="center"/>
+
+        </LinearLayout>
+
+    </androidx.cardview.widget.CardView>
+
+
+
+
 </androidx.constraintlayout.widget.ConstraintLayout>

@@ -11,11 +11,13 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import org.json.JSONObject;
 
+import java.util.ArrayList;
 import java.util.List;
 
 public class JsonObjectAdapter extends RecyclerView.Adapter<JsonObjectAdapter.JsonObjectViewHolder> {
 
     private List<JsonObjectModel> dataList;
+
 
     public JsonObjectAdapter(List<JsonObjectModel> dataList) {
         this.dataList = dataList;

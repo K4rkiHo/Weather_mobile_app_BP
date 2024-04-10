@@ -13,6 +13,7 @@ public class SharedPreferencesManager {
     private static final String ACCESS_TOKEN_KEY = "access_token";
     private static final String USERNAME = "username";
     private static final String KEY_STAY_LOGIN = "stay_login";
+    private static final String BASIC_BACKGROUD = "basic_background";
     private static final String KEY_ENCODED_PASSWORD = "encoded_password";
     private static final String STATION_ID = "station_id";
     private static final String LIST_ORDER = "list_order";
@@ -64,6 +65,19 @@ public class SharedPreferencesManager {
         SharedPreferences sharedPreferences = context.getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE);
         return sharedPreferences.getBoolean(KEY_STAY_LOGIN, false);
     }
+
+    public static void saveBasicBackgroudToSharedPreferences(Context context, boolean basicBackgroud) {
+        SharedPreferences sharedPreferences = context.getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE);
+        SharedPreferences.Editor editor = sharedPreferences.edit();
+        editor.putBoolean(BASIC_BACKGROUD, basicBackgroud);
+        editor.apply();
+    }
+
+    public static boolean getBasicBackgroudFromSharedPreferences(Context context) {
+        SharedPreferences sharedPreferences = context.getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE);
+        return sharedPreferences.getBoolean(BASIC_BACKGROUD, false);
+    }
+
 
     // Uložení zakódovaného hesla do SharedPreferences
     public static void saveEncodedPasswordToSharedPreferences(Context context, String password) {

@@ -3,7 +3,7 @@
   "battery_wh65": "Baterie WH65",
   "id": "ID",
   "indoor_humidity_percent": "Vnitřní vlhkost",
-  "indoor_temperature_F": "Vnitřní teplota",
+  "indoor_temperature_F": "Indoor Temperature",
   "outdoor_humidity_percent": "Venkovní vlhkost",
   "outdoor_temperature_F": "Venkovní teplota",
   "pressure_absolute_inHg": "Absolutní tlak",

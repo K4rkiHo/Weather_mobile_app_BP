@@ -26,6 +26,7 @@ import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.Iterator;
 
 /**
  * The configuration screen for the {@link WeatherWidget WeatherWidget} AppWidget.
@@ -41,7 +42,38 @@ public class WeatherWidgetConfigureActivity extends Activity {
     ArrayList<String> keysList = new ArrayList<>();
     View.OnClickListener mOnClickListener = new View.OnClickListener() {
         public void onClick(View v) {
-            String selectedKey = (String) mAppWidgetSpinner.getSelectedItem();
+            String selectedValue = (String) mAppWidgetSpinner.getSelectedItem(); // Získání vybrané hodnoty z Spinneru
+            String selectedKey = ""; // Inicializace proměnné pro uložení klíče
+
+            try {
+                // Načtení obsahu translate.json souboru pro překlady
+                InputStream translateStream = context.getResources().openRawResource(R.raw.translate);
+                BufferedReader reader = new BufferedReader(new InputStreamReader(translateStream));
+                StringBuilder translateJsonString = new StringBuilder();
+                String line;
+                while ((line = reader.readLine()) != null) {
+                    translateJsonString.append(line);
+                }
+                reader.close();
+
+                // Vytvoření JSONObject z načteného JSON řetězce
+                JSONObject translations = new JSONObject(translateJsonString.toString());
+
+                // Procházení překladů a hledání klíče, který odpovídá vybrané hodnotě
+                Iterator<String> keys = translations.keys();
+                while (keys.hasNext()) {
+                    String key = keys.next();
+                    String value = translations.getString(key);
+                    if (value.equals(selectedValue)) {
+                        selectedKey = key; // Nalezení klíče odpovídající vybrané hodnotě
+                        break;
+                    }
+                }
+            } catch (IOException | JSONException e) {
+                e.printStackTrace();
+            }
+
+            // Ostatní části vašeho onClickListeneru zůstávají nezměněné
             saveSelectedKeyPref(context, mAppWidgetId, selectedKey);
             //getDataFromApiByKey(context, selectedKey);
 
@@ -165,11 +197,35 @@ public class WeatherWidgetConfigureActivity extends Activity {
 
             // Naplnění listu klíčů
             keysList.clear();
-            for (int i = 0; i < keysArray.length(); i++) {
-                String key = keysArray.getString(i);
-                if (!key.equals("id") && !key.equals("time") && !key.equals("battery_bat") && !key.equals("battery_wh65")) {
-                    keysList.add(key);
+
+            String translatedValue = "";
+            try {
+                // Načtení obsahu translate.json souboru pro názvy klíčů
+                InputStream translateStream = context.getResources().openRawResource(R.raw.translate);
+                BufferedReader reader = new BufferedReader(new InputStreamReader(translateStream));
+                StringBuilder translateJsonString = new StringBuilder();
+                String line;
+                while ((line = reader.readLine()) != null) {
+                    translateJsonString.append(line);
                 }
+                reader.close();
+
+                // Vytvoření JSONObject z načteného JSON řetězce
+                JSONObject translations = new JSONObject(translateJsonString.toString());
+
+                // Zde můžete provést další manipulace s načtenými překlady (translations)
+                // Například získání konkrétního překladu pomocí klíče:
+
+                for (int i = 0; i < keysArray.length(); i++) {
+                    String key = keysArray.getString(i);
+                    translatedValue = translations.getString(key);
+                    if (!key.equals("id") && !key.equals("time") && !key.equals("battery_bat") && !key.equals("battery_wh65")) {
+                        keysList.add(translatedValue);
+                    }
+                }
+
+            } catch (IOException | JSONException e) {
+                e.printStackTrace();
             }
 
             // Populate spinner with keys

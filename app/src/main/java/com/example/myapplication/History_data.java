@@ -1,8 +1,10 @@
 package com.example.myapplication;
 
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.constraintlayout.widget.ConstraintLayout;
 
 import android.content.Intent;
+import android.graphics.Color;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.AdapterView;
@@ -11,16 +13,18 @@ import android.widget.AutoCompleteTextView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.anychart.AnyChart;
+import com.anychart.AnyChartView;
+import com.anychart.chart.common.dataentry.DataEntry;
+import com.anychart.chart.common.dataentry.ValueDataEntry;
+import com.anychart.charts.Cartesian;
+import com.anychart.core.cartesian.series.Line;
+import com.anychart.data.Mapping;
+import com.anychart.data.Set;
+import com.anychart.enums.Anchor;
+import com.anychart.enums.MarkerType;
+import com.anychart.graphics.vector.Stroke;
 import com.github.mikephil.charting.charts.LineChart;
-import com.github.mikephil.charting.components.AxisBase;
-import com.github.mikephil.charting.components.Description;
-import com.github.mikephil.charting.components.XAxis;
-import com.github.mikephil.charting.components.YAxis;
-import com.github.mikephil.charting.data.Entry;
-import com.github.mikephil.charting.data.LineData;
-import com.github.mikephil.charting.data.LineDataSet;
-import com.github.mikephil.charting.formatter.ValueFormatter;
-import com.github.mikephil.charting.interfaces.datasets.ILineDataSet;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -32,8 +36,13 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
-import java.text.DecimalFormat;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Date;
+import java.util.List;
+import java.util.Locale;
 
 public class History_data extends AppCompatActivity {
     private LineChart lineChart;
@@ -44,19 +53,44 @@ public class History_data extends AppCompatActivity {
     private String unit;
     private String weather;
     TextView textView;
+    private TextView textViewAverage;
+    private TextView textViewMin;
+    private TextView textViewMax;
+    private String convert_unit;
+
+    private String original_unit;
+
+    //private final List<DataEntry> seriesData = new ArrayList<>();
+    private Cartesian cartesian;
+    private AnyChartView anyChartView;
+
+    private UnitConverter unitConverter = new UnitConverter();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_history_data);
-        lineChart = findViewById(R.id.lineChart);
+        //lineChart = findViewById(R.id.lineChart);
         textView = findViewById(R.id.textView);
+
+        textViewAverage = findViewById(R.id.text_avg);
+        textViewMin = findViewById(R.id.text_min);
+        textViewMax = findViewById(R.id.text_max);
+
+        Boolean basic =  SharedPreferencesManager.getBasicBackgroudFromSharedPreferences(this);
+        if (basic) {
+            ConstraintLayout constraintLayout = findViewById(R.id.constantLayout_history);
+            constraintLayout.setBackgroundColor(Color.parseColor("#FFFFFF"));
+        }
+
 
         // Získání předaných dat z intentu
         Intent intent = getIntent();
         jsonString = intent.getStringExtra("jsonObject");
         unit = intent.getStringExtra("unit");
         weather = intent.getStringExtra("weather");
+        convert_unit = intent.getStringExtra("convert_unit");
+        original_unit = intent.getStringExtra("original_unit");
 
         textView.setText(weather);
 
@@ -65,14 +99,42 @@ public class History_data extends AppCompatActivity {
 
         autoCompleteTextView.setAdapter(adapter);
         autoCompleteTextView.setThreshold(1);
+
+        anyChartView = findViewById(R.id.any_chart_view);
+        anyChartView.setProgressBar(findViewById(R.id.progress_bar));
+
+        cartesian = AnyChart.line();
+
+        cartesian.animation(true);
+
+        cartesian.padding(10d, 10d, 10d, 10d);
+
+        cartesian.crosshair().enabled(true);
+        cartesian.crosshair()
+                .yLabel(true)
+                .yStroke((Stroke) null, null, null, (String) null, (String) null);
+
+        //cartesian.tooltip().positionMode(TooltipPositionMode.POINT);
+
+        //cartesian.title(weather);
+
+        cartesian.yAxis(0).title( convert_unit );
+        cartesian.xAxis(0).labels().padding(5d, 5d, 5d, 5d);
+
         autoCompleteTextView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
                 String selected = parent.getItemAtPosition(position).toString();
+                //seriesData.clear();
+
                 getDataFrom(selected);
+                anyChartView.setChart(cartesian);
+
+
                 //Toast.makeText(History_data.this, selected, Toast.LENGTH_SHORT).show();
             }
         });
+
     }
     private void getDataFrom(String selected) {
         new Thread(new Runnable() {
@@ -120,11 +182,16 @@ public class History_data extends AppCompatActivity {
         }).start();
     }
     private void processJsonResponse(String jsonResponse, String item_selected) {
+
         try {
             JSONArray jsonArray = new JSONArray(jsonResponse);
-            ArrayList<String> labels = new ArrayList<>();
-            // Inicializace ArrayListu pro uchování dat pro graf
-            ArrayList<Entry> entries = new ArrayList<>();
+            List<DataEntry> seriesData = new ArrayList<>();
+
+
+
+            //List<DataEntry> seriesData_weather = new ArrayList<>();
+
+            //seriesData.clear();
             double sum = 0;
             double min = Double.MAX_VALUE;
             double max = Double.MIN_VALUE;
@@ -137,7 +204,9 @@ public class History_data extends AppCompatActivity {
 
                 // Zaokrouhlení hodnoty na jedno desetinné místo
                 float roundedValue = (Math.round(value * 10.0f) / 10.0f);
+                double convertedValue = unitConverter.convertValueToSavedUnit(value, original_unit, convert_unit);
 
+                //seriesData.add(new CustomWeatherDataEntry(String.valueOf(i) + "h", Math.round(convertedValue)));
 
                 for (String item : historyData)
                 {
@@ -146,17 +215,62 @@ public class History_data extends AppCompatActivity {
                         if (item == "daily")
                         {
                             String timestamp = jsonObject.getString("week_start");
-                            labels.add(timestamp);
+                            SimpleDateFormat originalFormat = new SimpleDateFormat("EEE, dd MMM yyyy HH:mm:ss z", Locale.US); // Přidání Locale.US, pokud používáte anglický formát
+                            Date date = originalFormat.parse(timestamp);
+
+                            SimpleDateFormat targetFormat = new SimpleDateFormat("dd.MM.yyyy");
+                            String formattedDate = targetFormat.format(date);
+                            seriesData.add(new CustomWeatherDataEntry(formattedDate, Math.round(convertedValue)));
+
+                            //labels.add(timestamp);
                         }
                         else if (item == "weekly")
                         {
                             String timestamp = jsonObject.getString("week_start");
-                            labels.add(timestamp);
+                            SimpleDateFormat originalFormat = new SimpleDateFormat("EEE, dd MMM yyyy HH:mm:ss z", Locale.US);
+                            Date date = originalFormat.parse(timestamp);
+
+                            // Nastavení kalendáře na získané datum
+                            Calendar calendar = Calendar.getInstance();
+                            calendar.setTime(date);
+
+                            // Nastavení na první den týdne
+                            calendar.set(Calendar.DAY_OF_WEEK, calendar.getFirstDayOfWeek());
+                            Date firstDayOfWeek = calendar.getTime();
+
+                            // Nastavení na poslední den týdne
+                            calendar.add(Calendar.DAY_OF_YEAR, 6); // Přidání 6 dní pro získání posledního dne týdne
+                            Date lastDayOfWeek = calendar.getTime();
+
+                            // Formátování prvního a posledního dne týdne
+                            SimpleDateFormat targetFormat = new SimpleDateFormat("dd.MM.yyyy");
+                            String firstDayFormatted = targetFormat.format(firstDayOfWeek);
+                            String lastDayFormatted = targetFormat.format(lastDayOfWeek);
+
+                            // Vytvoření řetězce s rozmezím týdne
+                            String weekRange = firstDayFormatted + " - " + lastDayFormatted;
+
+                            // Přidání do datové struktury
+                            seriesData.add(new CustomWeatherDataEntry(weekRange, Math.round(convertedValue)));
                         }
                         else if (item == "monthly")
                         {
+                            // Získání hodnoty začátku následujícího měsíce ze získaných dat z API
                             String timestamp = jsonObject.getString("next_month_start");
-                            labels.add(timestamp);
+                            SimpleDateFormat originalFormat = new SimpleDateFormat("EEE, dd MMM yyyy HH:mm:ss z", Locale.US);
+                            Date date = originalFormat.parse(timestamp);
+
+                            // Nastavení kalendáře na získané datum
+                            Calendar calendar = Calendar.getInstance();
+                            calendar.setTime(date);
+
+                            // Získání názvu měsíce
+                            SimpleDateFormat targetFormat = new SimpleDateFormat("MMMM yyyy", Locale.US);
+                            String monthName = targetFormat.format(date);
+
+                            // Přidání názvu měsíce do datové struktury
+                            seriesData.add(new CustomWeatherDataEntry(monthName, Math.round(convertedValue))); // Přidání názvu měsíce
+
                         }
                     }
                 }
@@ -164,7 +278,7 @@ public class History_data extends AppCompatActivity {
 
 
                 // Přidání nového bodu do seznamu bodů pro graf
-                entries.add(new Entry(i, roundedValue));
+                //entries.add(new Entry(i, roundedValue));
                 // Aktualizace sumy pro výpočet průměru
                 sum += value;
 
@@ -178,74 +292,42 @@ public class History_data extends AppCompatActivity {
             }
             double average = sum / jsonArray.length();
 
-            // Vytvoření datové sady pro graf
-            LineDataSet dataSet = new LineDataSet(entries, weather);
-            dataSet.setColor(getResources().getColor(R.color.colorPrimary));
-            dataSet.setCircleColor(getResources().getColor(R.color.colorPrimary));
-            dataSet.setValueTextColor(getResources().getColor(R.color.colorPrimaryDark));
-            dataSet.setLineWidth(2f);
-            dataSet.setCircleRadius(4f);
-            dataSet.setDrawCircleHole(false);
-            dataSet.setValueTextSize(12f);
+            textViewAverage.setText("Avg: " + Math.round(unitConverter.convertValueToSavedUnit(average, original_unit, convert_unit)) + " " + convert_unit);
+            textViewMin.setText("Min: " + Math.round(unitConverter.convertValueToSavedUnit(min, original_unit, convert_unit)) + " " + convert_unit);
+            textViewMax.setText("Max: " + Math.round(unitConverter.convertValueToSavedUnit(max, original_unit, convert_unit)) + " " + convert_unit);
 
-            // Vytvoření datového objektu pro graf
-            ArrayList<ILineDataSet> dataSets = new ArrayList<>();
-            dataSets.add(dataSet);
+            Set set = Set.instantiate();
+            set.data(seriesData);
+            Mapping series1Mapping = set.mapAs("{ x: 'x', value: 'value' }");
+            Line series1 = cartesian.line(series1Mapping);
+            series1.name(weather);
+            series1.hovered().markers().enabled(true);
+            series1.hovered().markers()
+                    .type(MarkerType.CIRCLE)
+                    .size(4d);
+            series1.tooltip()
+                    .position("right")
+                    .anchor(Anchor.LEFT_CENTER)
+                    .offsetX(5d)
+                    .offsetY(5d);
 
-            // Vytvoření datové struktury pro graf
-            LineData lineData = new LineData(dataSets);
+            //cartesian.legend().enabled(true);
+            cartesian.legend().fontSize(18d);
+            cartesian.legend().padding(0d, 0d, 10d, 0d);
 
-            // Nastavení dat do grafu
-            lineChart.setData(lineData);
-
-            // Nastavení formátu popisu osy X
-            XAxis xAxis = lineChart.getXAxis();
-            xAxis.setPosition(XAxis.XAxisPosition.BOTTOM);
-            xAxis.setGranularity(1f);
-            xAxis.setValueFormatter(new ValueFormatter() {
-                @Override
-                public String getAxisLabel(float value, AxisBase axis) {
-                    int index = (int) value;
-                    if (index >= 0 && index < labels.size()) {
-                        return labels.get(index); // Vracíme popisek z ArrayListu labels
-                    } else {
-                        return ""; // Pokud index není v rozsahu, vrátíme prázdný řetězec
-                    }
-                }
-            });
-
-            // Popis osy Y
-            YAxis leftAxis = lineChart.getAxisLeft();
-            leftAxis.setValueFormatter(new ValueFormatter() {
-                @Override
-                public String getFormattedValue(float value) {
-                    DecimalFormat df = new DecimalFormat("#.#"); // formátování na jeden desetinný bod
-                    return df.format(value);
-                }
-            });
-
-            // Zakázání popisu osy Y na pravé straně
-            lineChart.getAxisRight().setEnabled(false);
-
-            // Nastavení popisu grafu
-            Description description = new Description();
-            description.setText("");
-            lineChart.setDescription(description);
-
-            // Aktualizace grafu
-            lineChart.invalidate();
-
-
-            String[] parts = unit.split(" ");
-            String unit_ = parts[1];
-            //textViewAverage.setText("Average: " + String.format("%.1f", average) + " " + unit_ + "\n" + "Min: " + String.format("%.1f", min) + " " + unit_ + "\n" + "Max: " + String.format("%.1f", max) + " " + unit_ );
-            //textViewMin.setText("Min: " + String.format("%.1f", min) + " " + unit);
-            //textViewMax.setText("Max: " + String.format("%.1f", max) + " " + unit);
-            //dej mi všechny hodnoty do textViewAverage
+            cartesian.xScroller(true);
 
         } catch (JSONException e) {
             e.printStackTrace();
             Toast.makeText(this, "Error processing JSON response", Toast.LENGTH_SHORT).show();
+        } catch (ParseException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    static class CustomWeatherDataEntry extends ValueDataEntry {
+        CustomWeatherDataEntry(String x, Number value) {
+            super(x, value);
         }
     }
 }

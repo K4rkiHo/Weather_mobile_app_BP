@@ -15,15 +15,22 @@ import android.view.View;
 import android.widget.RemoteViews;
 import android.widget.TextView;
 
+import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.BufferedReader;
+import java.io.DataOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.text.DecimalFormat;
+import java.text.DecimalFormatSymbols;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Locale;
 
 /**
  * Implementation of App Widget functionality.
@@ -35,13 +42,75 @@ public class WeatherWidget extends AppWidgetProvider {
     public static String selectedKey_;
     public static String savedUnit;
 
+    public static String value_pub;
+
+    private static final UnitConverter unitConverter = new UnitConverter();
+
+    private final List<MinMaxAngValues> minMaxAngValues_arr = new ArrayList<>();
+
     static void updateAppWidget(Context context, AppWidgetManager appWidgetManager,
-                                int appWidgetId, String selectedKey, String value) {
+                                int appWidgetId, String selectedKey, String value, double min, double max, double avg) {
         // Získání RemoteViews pro widget
         RemoteViews views = new RemoteViews(context.getPackageName(), R.layout.weather_widget);
         // Nastavení textu na základě vybraného klíče a hodnoty
-        views.setTextViewText(R.id.keyTextView, selectedKey);
+
         views.setTextViewText(R.id.valueTextView, value);
+
+        String username = SharedPreferencesManager.getUsernameFromSharedPreferences(context);
+        String password = SharedPreferencesManager.getDecodedPasswordFromSharedPreferences(context);
+        System.out.println("USERNAME: " + username);
+        System.out.println("PASSWORD " + password);
+        sendLoginRequest(context, username, password);
+
+        String translatedValue = "";
+        String savedUnit_original = "";
+        try {
+            // Načtení obsahu translate.json souboru pro názvy klíčů
+            InputStream translateStream = context.getResources().openRawResource(R.raw.translate);
+            BufferedReader reader = new BufferedReader(new InputStreamReader(translateStream));
+            StringBuilder translateJsonString = new StringBuilder();
+            String line;
+            while ((line = reader.readLine()) != null) {
+                translateJsonString.append(line);
+            }
+            reader.close();
+
+            // Vytvoření JSONObject z načteného JSON řetězce
+            JSONObject translations = new JSONObject(translateJsonString.toString());
+
+            // Zde můžete provést další manipulace s načtenými překlady (translations)
+            // Například získání konkrétního překladu pomocí klíče:
+            translatedValue = translations.getString(selectedKey); // Nahraďte "KEY" za skutečný klíč
+
+        } catch (IOException | JSONException e) {
+            e.printStackTrace();
+        }
+
+        try {
+            // Načtení obsahu translate.json souboru pro názvy klíčů
+            InputStream translateStream = context.getResources().openRawResource(R.raw.units);
+            BufferedReader reader = new BufferedReader(new InputStreamReader(translateStream));
+            StringBuilder translateJsonString = new StringBuilder();
+            String line;
+            while ((line = reader.readLine()) != null) {
+                translateJsonString.append(line);
+            }
+            reader.close();
+
+            // Vytvoření JSONObject z načteného JSON řetězce
+            JSONObject unit = new JSONObject(translateJsonString.toString());
+
+            // Zde můžete provést další manipulace s načtenými překlady (translations)
+            // Například získání konkrétního překladu pomocí klíče:
+            savedUnit_original = unit.getString(selectedKey); // Nahraďte "KEY" za skutečný klíč
+
+        } catch (IOException | JSONException e) {
+            e.printStackTrace();
+        }
+
+        views.setTextViewText(R.id.keyTextView, translatedValue);
+
+
 
         selectedKey_ = selectedKey;
 
@@ -72,19 +141,23 @@ public class WeatherWidget extends AppWidgetProvider {
         // Vytvoření Intentu pro spuštění po kliknutí na text ve widgetu
 
         Intent intent = new Intent(context, Weather_layout.class);
-        intent.putExtra("weather", selectedKey);
+        intent.putExtra("weather", translatedValue);
         intent.putExtra("jsonObject", selectedKey);
-        intent.putExtra("unit", savedUnit);
+        intent.putExtra("unit", savedUnit_original);
         intent.putExtra("convert_unit", savedUnit);
-        intent.putExtra("original_unit", savedUnit);
+        intent.putExtra("original_unit", savedUnit_original);
 
-// Přidání identifikátoru widgetu jako extra do Intentu
+        // Přidání identifikátoru widgetu jako extra do Intentu
         intent.putExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, appWidgetId);
 
         PendingIntent pendingIntent = PendingIntent.getActivity(context, appWidgetId, intent, PendingIntent.FLAG_IMMUTABLE);
         views.setOnClickPendingIntent(R.id.keyTextView, pendingIntent);
 
-        views.setTextViewText(R.id.valueTextView, value + " " + savedUnit);
+        views.setTextViewText(R.id.valueTextView, Math.round(unitConverter.convertValueToSavedUnit(Double.parseDouble(value), savedUnit_original, savedUnit)) + " " + savedUnit);
+
+        views.setTextViewText(R.id.minTextView, "min: " + Math.round(unitConverter.convertValueToSavedUnit(min, savedUnit_original, savedUnit)) + " " + savedUnit);
+        views.setTextViewText(R.id.maxTextView, "max: " + Math.round(unitConverter.convertValueToSavedUnit(max, savedUnit_original, savedUnit)) + " " + savedUnit);
+        views.setTextViewText(R.id.avgTextView, "avg: " + Math.round(unitConverter.convertValueToSavedUnit(avg, savedUnit_original, savedUnit)) + " " + savedUnit);
 
         System.out.println("VALUE: " + value);
         System.out.println("savedUnit: " + savedUnit);
@@ -115,6 +188,8 @@ public class WeatherWidget extends AppWidgetProvider {
 
 
             getDataFromApiByKey(context, selectedKey, appWidgetManager, appWidgetId);
+
+            getDataFromApiByKeyAVG(context, selectedKey, appWidgetManager, appWidgetId);
         }
 
         // Nastavit opakující se aktualizaci pomocí AlarmManageru
@@ -221,12 +296,166 @@ public class WeatherWidget extends AppWidgetProvider {
 
             // Získání hodnoty na základě vybraného klíče
             String value = apiResponse.getString(selectedKey);
+            value_pub = value;
+            double min = 0;
+            double max = 0;
+            double avg = 0;
 
             // Aktualizace widgetu s novou hodnotou
-            updateAppWidget(context, appWidgetManager, appWidgetId, selectedKey, value);
+            updateAppWidget(context, appWidgetManager, appWidgetId, selectedKey, value, min, max, avg);
 
         } catch (JSONException e) {
             e.printStackTrace();
         }
+    }
+
+    private void getDataFromApiByKeyAVG(final Context context, final String selectedKey,
+                                     final AppWidgetManager appWidgetManager, final int appWidgetId) {
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                // Získání uložené IP adresy z SharedPreferences
+                String ipAddress = SharedPreferencesManager.getIpAddressFromSharedPreferences(context);
+                String apiUrl = "http://" + ipAddress + ":5000/api/data/aggregated/today";
+
+                // Odeslání požadavku na server
+                try {
+                    URL url = new URL(apiUrl);
+                    HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+                    connection.setRequestMethod("GET");
+
+                    // Přidání "Bearer token" do hlavičky požadavku
+                    String accessToken = SharedPreferencesManager.getAccessTokenFromSharedPreferences(context);
+                    connection.setRequestProperty("Authorization", "Bearer " + accessToken);
+
+                    // Přečtení odpovědi od serveru
+                    InputStream inputStream = connection.getInputStream();
+                    BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream));
+                    StringBuilder response = new StringBuilder();
+                    String line;
+                    while ((line = reader.readLine()) != null) {
+                        response.append(line);
+                    }
+                    reader.close();
+
+                    // Zpracování odpovědi
+                    final String jsonResponse = response.toString();
+                    new Handler(Looper.getMainLooper()).post(new Runnable() {
+                        @Override
+                        public void run() {
+                            processJsonResponseByKeyAVG(context, jsonResponse, selectedKey, appWidgetManager, appWidgetId, value_pub);
+                        }
+                    });
+
+                    // Uzavření spojení
+                    connection.disconnect();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+        }).start();
+    }
+
+    private void processJsonResponseByKeyAVG(Context context, String jsonResponse,
+                                          String selectedKey, AppWidgetManager appWidgetManager, int appWidgetId, String value_) {
+        try {
+            // Create JSON object from the response
+            JSONArray jsonArray = new JSONArray(jsonResponse);
+
+            double sum = 0;
+            double min = Double.MAX_VALUE;
+            double max = 0;
+            double avg = 0;
+
+            for (int i = 0; i < jsonArray.length(); i++) {
+                JSONObject jsonObject = jsonArray.getJSONObject(i);
+                double value = jsonObject.getDouble(selectedKey);
+                sum += value;
+                if (value < min) {
+                    min = value;
+                }
+                if (value > max) {
+                    max = value;
+                }
+            }
+
+            avg = sum / jsonArray.length();
+            DecimalFormat df = new DecimalFormat("#.##");
+            df.setDecimalSeparatorAlwaysShown(false);
+            df.setDecimalFormatSymbols(DecimalFormatSymbols.getInstance(Locale.US));
+            avg = Double.parseDouble(df.format(avg));
+
+            //MinMaxAngValues m = new MinMaxAngValues(selectedKey, min, max, avg);
+            //minMaxAngValues_arr.add(m);
+
+            // Aktualizace widgetu s novou hodnotou
+            updateAppWidget(context, appWidgetManager, appWidgetId, selectedKey, value_, min, max, avg);
+
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+    }
+
+
+    private static void sendLoginRequest(final Context context, final String username, final String password) {
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                // Získání uložené IP adresy z SharedPreferences
+                String ipAddress = SharedPreferencesManager.getIpAddressFromSharedPreferences(context);
+                String apiUrl = "http://" + ipAddress + ":5000/api/login";
+
+                // Vytvoření JSON objektu s přihlašovacími údaji
+                JSONObject requestData = new JSONObject();
+                try {
+                    requestData.put("username", username);
+                    requestData.put("password", password);
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                }
+
+                // Odeslání požadavku na server
+                try {
+                    URL url = new URL(apiUrl);
+                    HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+                    connection.setRequestMethod("POST");
+                    connection.setRequestProperty("Content-Type", "application/json");
+                    connection.setDoOutput(true);
+
+                    // Zapsání dat do výstupního proudu
+                    DataOutputStream outputStream = new DataOutputStream(connection.getOutputStream());
+                    outputStream.writeBytes(requestData.toString());
+                    outputStream.flush();
+                    outputStream.close();
+
+                    // Zpracování odpovědi
+                    int responseCode = connection.getResponseCode();
+                    if (responseCode == HttpURLConnection.HTTP_OK) {
+                        System.out.println("Login successful!");
+                        // Pokud je odpověď 200, zpracujeme access_token a uložíme ho do SharedPreferences
+                        InputStream inputStream = connection.getInputStream();
+                        BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream));
+                        StringBuilder response = new StringBuilder();
+                        String line;
+                        while ((line = reader.readLine()) != null) {
+                            response.append(line);
+                        }
+                        reader.close();
+
+                        // Zpracování odpovědi
+                        JSONObject jsonResponse = new JSONObject(response.toString());
+                        String accessToken = jsonResponse.getString("access_token");
+                        SharedPreferencesManager.saveAccessTokenToSharedPreferences(context, accessToken);
+                        SharedPreferencesManager.saveUsernameToSharedPreferences(context, username);
+                        SharedPreferencesManager.saveEncodedPasswordToSharedPreferences(context, password);
+                    }
+
+                    // Uzavření spojení
+                    connection.disconnect();
+                } catch (IOException | JSONException e) {
+                    e.printStackTrace();
+                }
+            }
+        }).start();
     }
 }

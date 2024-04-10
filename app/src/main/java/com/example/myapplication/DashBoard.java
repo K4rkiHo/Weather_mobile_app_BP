@@ -72,13 +72,17 @@ public class DashBoard extends AppCompatActivity {
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_dash_board);
+
+        Boolean basic =  SharedPreferencesManager.getBasicBackgroudFromSharedPreferences(this);
+        if (basic) {
+            DrawerLayout drawerLayout = findViewById(R.id.drawerLayout_);
+            drawerLayout.setBackgroundColor(Color.parseColor("#FFFFFF"));
+        }
+
         recyclerView = findViewById(R.id.recyclerView);
 
         Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
-
-        // Načtení pořadí z SharedPreferences
-        SharedPreferencesManager.loadOrderFromSharedPreferences(this, dataList);
 
         getDataFromApiTest();
         new Handler().postDelayed(new Runnable() {
@@ -111,6 +115,8 @@ public class DashBoard extends AppCompatActivity {
                 }
             }
         }, 1000);
+
+        SharedPreferencesManager.loadOrderFromSharedPreferences(this, dataList);
 
     }
 
@@ -205,7 +211,15 @@ public class DashBoard extends AppCompatActivity {
                         // Vytvoření nového objektu JsonObjectModel a přidání do seznamu
                         for (int i = 0; i < minMaxAngValues_arr.size(); i++) {
                             if (minMaxAngValues_arr.get(i).getStringValue().equals(key)) {
-                                dataList.add(new JsonObjectModel(czechKey + " (" + savedUnit + ")", roundedValue + " " + savedUnit, key, "min: " + Math.round(unitConverter.convertValueToSavedUnit(minMaxAngValues_arr.get(i).getMinValue(), unit, savedUnit)) + " " + savedUnit, "max: " + Math.round(unitConverter.convertValueToSavedUnit(minMaxAngValues_arr.get(i).getMaxValue(), unit, savedUnit)) + " " + savedUnit, "avg: " + Math.round(unitConverter.convertValueToSavedUnit(minMaxAngValues_arr.get(i).getAvgValue(), unit, savedUnit)) + " " + savedUnit, savedUnit, unit));
+                                /*
+                                if (apiResponse.length() > 0) {
+                                    dataList.add(new JsonObjectModel(czechKey + " (" + savedUnit + ")", savedUnit, key, "min: " + savedUnit, "max: " + savedUnit, "avg: " + savedUnit, savedUnit, unit));
+                                }
+
+                                 */
+
+                                    dataList.add(new JsonObjectModel(czechKey + " (" + savedUnit + ")", roundedValue + " " + savedUnit, key, "min: " + Math.round(unitConverter.convertValueToSavedUnit(minMaxAngValues_arr.get(i).getMinValue(), unit, savedUnit)) + " " + savedUnit, "max: " + Math.round(unitConverter.convertValueToSavedUnit(minMaxAngValues_arr.get(i).getMaxValue(), unit, savedUnit)) + " " + savedUnit, "avg: " + Math.round(unitConverter.convertValueToSavedUnit(minMaxAngValues_arr.get(i).getAvgValue(), unit, savedUnit)) + " " + savedUnit, savedUnit, unit));
+
                             } else {
                                 Log.e("Error", "Key not found");
                             }
