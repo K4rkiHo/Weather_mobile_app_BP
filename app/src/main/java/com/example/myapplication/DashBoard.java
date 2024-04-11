@@ -73,11 +73,15 @@ public class DashBoard extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_dash_board);
 
+
+
         Boolean basic =  SharedPreferencesManager.getBasicBackgroudFromSharedPreferences(this);
         if (basic) {
             DrawerLayout drawerLayout = findViewById(R.id.drawerLayout_);
             drawerLayout.setBackgroundColor(Color.parseColor("#FFFFFF"));
         }
+
+        SharedPreferencesManager.loadOrderFromSharedPreferences(this, dataList);
 
         recyclerView = findViewById(R.id.recyclerView);
 
@@ -117,6 +121,8 @@ public class DashBoard extends AppCompatActivity {
         }, 1000);
 
         SharedPreferencesManager.loadOrderFromSharedPreferences(this, dataList);
+
+        //SharedPreferencesManager.loadOrderFromSharedPreferences_test(this, dataList);
 
     }
 
@@ -218,7 +224,7 @@ public class DashBoard extends AppCompatActivity {
 
                                  */
 
-                                    dataList.add(new JsonObjectModel(czechKey + " (" + savedUnit + ")", roundedValue + " " + savedUnit, key, "min: " + Math.round(unitConverter.convertValueToSavedUnit(minMaxAngValues_arr.get(i).getMinValue(), unit, savedUnit)) + " " + savedUnit, "max: " + Math.round(unitConverter.convertValueToSavedUnit(minMaxAngValues_arr.get(i).getMaxValue(), unit, savedUnit)) + " " + savedUnit, "avg: " + Math.round(unitConverter.convertValueToSavedUnit(minMaxAngValues_arr.get(i).getAvgValue(), unit, savedUnit)) + " " + savedUnit, savedUnit, unit));
+                                    dataList.add(new JsonObjectModel(i + "", czechKey + " (" + savedUnit + ")", roundedValue + " " + savedUnit, key, "min: " + Math.round(unitConverter.convertValueToSavedUnit(minMaxAngValues_arr.get(i).getMinValue(), unit, savedUnit)) + " " + savedUnit, "max: " + Math.round(unitConverter.convertValueToSavedUnit(minMaxAngValues_arr.get(i).getMaxValue(), unit, savedUnit)) + " " + savedUnit, "avg: " + Math.round(unitConverter.convertValueToSavedUnit(minMaxAngValues_arr.get(i).getAvgValue(), unit, savedUnit)) + " " + savedUnit, savedUnit, unit));
 
                             } else {
                                 Log.e("Error", "Key not found");
@@ -227,15 +233,13 @@ public class DashBoard extends AppCompatActivity {
                     }
                 }
             }
-
+            SharedPreferencesManager.saveOrderToSharedPreferences(DashBoard.this, dataList);
             // Inicializace RecyclerView
             recyclerView.setLayoutManager(new LinearLayoutManager(this));
 
             // Vytvoření a nastavení adaptéru
             JsonObjectAdapter adapter = new JsonObjectAdapter(dataList);
             recyclerView.setAdapter(adapter);
-
-            SharedPreferencesManager.saveOrderToSharedPreferences(DashBoard.this, dataList);
         } catch (IOException | JSONException e) {
             e.printStackTrace();
         }
@@ -485,6 +489,8 @@ public class DashBoard extends AppCompatActivity {
 
             Collections.swap(dataList, fromPosition, toPosition);
             recyclerView.getAdapter().notifyItemMoved(fromPosition, toPosition);
+
+            SharedPreferencesManager.saveOrderToSharedPreferences(DashBoard.this, dataList);
 
             return false;
         }

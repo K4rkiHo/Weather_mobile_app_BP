@@ -16,8 +16,7 @@ public class SharedPreferencesManager {
     private static final String BASIC_BACKGROUD = "basic_background";
     private static final String KEY_ENCODED_PASSWORD = "encoded_password";
     private static final String STATION_ID = "station_id";
-    private static final String LIST_ORDER = "list_order";
-
+    private static final String LIST_ORDER = "list_order_test";
 
     // Uložení IP adresy do SharedPreferences
     public static void saveIpAddressToSharedPreferences(Context context, String ipAddress) {
@@ -113,8 +112,10 @@ public class SharedPreferencesManager {
 
         StringBuilder orderBuilder = new StringBuilder();
         for (JsonObjectModel item : dataList) {
-            orderBuilder.append(item.getKey()).append(",");
+            orderBuilder.append(item.getId()).append(",");
         }
+
+        System.out.println("orderBuilder: " + orderBuilder.toString());
         editor.putString(LIST_ORDER, orderBuilder.toString());
         editor.apply();
     }
@@ -128,7 +129,7 @@ public class SharedPreferencesManager {
         // Naplnění nového seznamu podle uloženého pořadí
         for (String key : orderArray) {
             for (JsonObjectModel item : dataList) {
-                if (item.getKey().equals(key)) {
+                if (item.getId().equals(key)) {
                     orderedList.add(item);
                     break;
                 }
@@ -137,4 +138,46 @@ public class SharedPreferencesManager {
         dataList.clear();
         dataList.addAll(orderedList);
     }
+
+    public static void loadOrderFromSharedPreferences_test(Context context, List<JsonObjectModel> dataList) {
+        SharedPreferences sharedPreferences = context.getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE);
+        String order = sharedPreferences.getString(LIST_ORDER, "");
+        String[] orderArray = order.split(",");
+
+        // Výpis orderArray
+        System.out.print("orderArray: ");
+        for (String item : orderArray) {
+            System.out.print(item + ", ");
+        }
+        System.out.println();
+
+        // Výpis order
+        System.out.println("order: " + order);
+
+        List<JsonObjectModel> orderedList = new ArrayList<>();
+
+        // Naplnění nového seznamu podle uloženého pořadí
+        for (String key : orderArray) {
+            System.out.println("key: " + key);
+            for (JsonObjectModel item : dataList) {
+                System.out.println("item.getId(): " + item.getId());
+                if (item.getId().equals(key)) {
+
+                    orderedList.add(item);
+                    break;
+                }
+            }
+        }
+
+        // Výpis orderedList
+        System.out.print("orderedList: ");
+        for (JsonObjectModel item : orderedList) {
+            System.out.print(item.getId() + ", ");
+        }
+        System.out.println();
+
+        dataList.clear();
+        dataList.addAll(orderedList);
+    }
+
 }

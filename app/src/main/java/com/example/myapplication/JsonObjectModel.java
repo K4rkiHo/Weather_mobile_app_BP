@@ -1,6 +1,7 @@
 package com.example.myapplication;
 
 public class JsonObjectModel {
+    private String id;
     private String key;
     private String value;
     private String defaultValue;
@@ -10,7 +11,8 @@ public class JsonObjectModel {
     private String unit;
     private String original_unit;
 
-    public JsonObjectModel(String key, String value, String defaultValue, String min, String max, String avg, String unit, String original_unit) {
+    public JsonObjectModel(String id, String key, String value, String defaultValue, String min, String max, String avg, String unit, String original_unit) {
+        this.id = id;
         this.key = key;
         this.value = value;
         this.defaultValue = defaultValue;
@@ -19,6 +21,10 @@ public class JsonObjectModel {
         this.avg = avg;
         this.unit = unit;
         this.original_unit = original_unit;
+    }
+
+    public String getId() {
+        return id;
     }
 
     public String getKey() {
@@ -55,6 +61,10 @@ public class JsonObjectModel {
 
     public void setValue(String value) {
         this.value = value;
+    }
+
+    public void setId(String id) {
+        this.id = id;
     }
 
     public void setDefaultValue(String defaultValue) {
