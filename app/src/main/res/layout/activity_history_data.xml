@@ -28,7 +28,6 @@
         android:layout_height="460dp"
         android:layout_margin="8dp"
         app:cardCornerRadius="16dp"
-        app:layout_constraintBottom_toTopOf="@id/textInputLayout"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/textView">
@@ -49,16 +48,14 @@
 
     </androidx.cardview.widget.CardView>
 
-
     <com.google.android.material.textfield.TextInputLayout
-        android:background="@color/white"
+        android:background="@drawable/rounded_color_white"
         android:id="@+id/textInputLayout"
         style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox.ExposedDropdownMenu"
-        android:layout_width="match_parent"
+        android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_margin="10dp"
         android:hint="@string/select"
-        app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/cardView"
@@ -74,8 +71,8 @@
             android:inputType="none">
 
         </AutoCompleteTextView>
-    </com.google.android.material.textfield.TextInputLayout>
 
+    </com.google.android.material.textfield.TextInputLayout>
 
     <androidx.cardview.widget.CardView
         android:id="@+id/cardView2"

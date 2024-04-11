@@ -12,6 +12,8 @@ public class Units_settings extends AppCompatActivity {
     private SharedPreferences sharedPreferences;
     private static final String[] GROUP_KEYS = {"temp", "press", "wind", "rain", "solar", "hum"};
 
+    private static final String FIRST_RUN_KEY = "firstRun";
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -19,6 +21,16 @@ public class Units_settings extends AppCompatActivity {
 
         // Inicializace SharedPreferences
         sharedPreferences = getSharedPreferences("unit_settings", MODE_PRIVATE);
+
+
+        // Kontrola, zda je to první spuštění aplikace
+        boolean isFirstRun = sharedPreferences.getBoolean(FIRST_RUN_KEY, true);
+        if (isFirstRun) {
+            // Nastavení výchozích hodnot při prvním spuštění aplikace
+            setDefaultValues();
+            // Nastavení flagu firstRun na false
+            sharedPreferences.edit().putBoolean(FIRST_RUN_KEY, false).apply();
+        }
 
         // Načtení uloženého stavu radio tlačítek a nastavení jejich stavu
         loadRadioButtonsState();
@@ -40,6 +52,20 @@ public class Units_settings extends AppCompatActivity {
 
         // Testování výběru tlačítek a jejich jednotek
         //testSelectedUnits();
+    }
+
+    // Nastavení výchozích hodnot radio tlačítek při prvním spuštění aplikace
+    private void setDefaultValues() {
+        SharedPreferences.Editor editor = sharedPreferences.edit();
+        // Příklad: Nastavení výchozího tlačítka pro teplotu na °C
+        //editor.putInt("radioBtn_temp", R.id.radioBtn1_temp);
+        editor.putInt("radioBtnsolar", R.id.radioBtn1_solar);
+        editor.putInt("radioBtntemp", R.id.radioBtn1_temp);
+        editor.putInt("radioBtnrain", R.id.radioBtn3_rain);
+        editor.putInt("radioBtnwind",  R.id.radioBtn3_wind);
+        editor.putInt("radioBtnhum", R.id.radioBtn1_hum);
+        editor.putInt("radioBtnpress",  R.id.radioBtn1_press);
+        editor.apply();
     }
 
     // Uloží stav vybraných radio tlačítek do SharedPreferences

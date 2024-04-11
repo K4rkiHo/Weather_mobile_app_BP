@@ -312,13 +312,6 @@ public class IPScan extends AppCompatActivity {
         editor.putString("unit___wind", "mph");
         editor.putString("unit___angle", "°");
 
-        editor.putInt("radioBtnsolar", 2131231278);
-        editor.putInt("radioBtntemp", 2131231279);
-        editor.putInt("radioBtnrain", 2131231287);
-        editor.putInt("radioBtnwind", 2131231289);
-        editor.putInt("radioBtnhum", 2131231275);
-        editor.putInt("radioBtnpress", 2131231276);
-
         editor.apply();
     }
 }

@@ -51,7 +51,6 @@ public class SignUP extends AppCompatActivity {
                 sendRegisterRequest(SignUP.this, username, password, station_id);
             }
         });
-        finish();
     }
 
 

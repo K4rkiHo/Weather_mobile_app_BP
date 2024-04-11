@@ -46,6 +46,8 @@ public class MainActivity extends AppCompatActivity {
     private EditText passwordEditText;
     private TextView errorTextView;
 
+    private TextView signupText;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -62,6 +64,7 @@ public class MainActivity extends AppCompatActivity {
             String password = SharedPreferencesManager.getDecodedPasswordFromSharedPreferences(this);
             sendLoginRequest(MainActivity.this, username, password);
             //openDashboardActivity();
+
         }
 
         // Nastavení posluchače pro tlačítko Login
@@ -77,11 +80,15 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
-        TextView signupText = findViewById(R.id.signupText);
+        signupText = findViewById(R.id.signupText);
         signupText.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                openSignUpActivity();
+                try {
+                    openSignUpActivity();
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
             }
         });
     }
@@ -141,6 +148,7 @@ public class MainActivity extends AppCompatActivity {
 
                         // Přechod na další aktivitu
                         openDashboardActivity();
+                        finish();
                     } else {
                         // Zde můžete zpracovat různé kódy odpovědi (např. 404, 500 atd.)
                         // Prozatím zde nebudeme zpracovávat jiné kódy než 200
@@ -157,10 +165,11 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void openSignUpActivity() {
-        Intent intent = new Intent(this, SignUP.class);
-        Bundle bundle = ActivityOptions.makeSceneTransitionAnimation(this).toBundle();
-        startActivity(intent, bundle);
-        finish();
+                Intent intent = new Intent(MainActivity.this, SignUP.class);
+                Bundle bundle = ActivityOptions.makeSceneTransitionAnimation(MainActivity.this).toBundle();
+                startActivity(intent, bundle);
+                //finish();
+
     }
 
     public void openDashboardActivity() {

@@ -2,21 +2,36 @@
     style="@style/Widget.MyApplication.AppWidget.Container"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/violet"
+    android:background="@drawable/rounded_corners"
     android:theme="@style/Theme.MyApplication.AppWidgetContainer">
 
     <FrameLayout
-        android:layout_centerVertical="true"
-        android:layout_centerInParent="true"
-        android:layout_centerHorizontal="true"
         android:id="@+id/widget_container"
         android:layout_width="match_parent"
-        android:layout_height="match_parent">
+        android:layout_height="wrap_content"
+        android:background="@drawable/rounded_color_blue">
+
+        <Button
+            android:id="@+id/settingsButton"
+            android:layout_width="30dp"
+            android:layout_height="30dp"
+            android:layout_gravity="top|end"
+            android:layout_marginTop="12dp"
+            android:layout_marginEnd="12dp"
+            android:background="@drawable/ic_settings" />
+
+        <Button
+            android:id="@+id/refreshButton"
+            android:layout_width="30dp"
+            android:layout_height="30dp"
+            android:layout_gravity="bottom|end"
+            android:layout_marginBottom="12dp"
+            android:layout_marginEnd="12dp"
+            android:background="@drawable/refresh" />
 
         <LinearLayout
             android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:background="#90FFFFFF"
+            android:layout_height="wrap_content"
             android:orientation="vertical"
             android:padding="16dp">
 
@@ -25,19 +40,20 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:onClick="onTextClick"
-                android:textColor="@color/black"
+                android:textColor="#616161"
                 android:text="Key"
-                android:textSize="26dp"
-                android:textStyle="bold" />
+                android:textSize="17sp"
+                android:textStyle="bold"/>
 
             <TextView
+                android:paddingTop="0dp"
                 android:id="@+id/valueTextView"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginBottom="8dp"
                 android:textColor="@color/black"
                 android:text="Value"
-                android:textSize="20dp" />
+                android:textSize="40sp" />
 
         </LinearLayout>
 
@@ -45,41 +61,51 @@
 
     <!-- Přidání dalších tří TextView pro min, max, avg -->
     <LinearLayout
+        android:background="@drawable/rounded_corner_violet"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_alignParentBottom="true"
         android:orientation="horizontal"
-        android:paddingBottom="16dp">
+        android:paddingLeft="10dp"
+        android:paddingRight="10dp"
+        android:paddingBottom="10dp"
+        android:paddingTop="10dp">
 
         <TextView
+            android:background="@drawable/rounded_color_white"
             android:id="@+id/minTextView"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
             android:text="Min"
             android:textColor="#FF0000"
-            android:textSize="13dp"
-            android:gravity="center"/>
+            android:textSize="15sp"
+            android:gravity="center"
+            android:layout_marginEnd="5dp"/>
 
         <TextView
+            android:background="@drawable/rounded_color_white"
             android:id="@+id/maxTextView"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
             android:text="Max"
             android:textColor="#006400"
-            android:textSize="13dp"
-            android:gravity="center"/>
+            android:textSize="15sp"
+            android:gravity="center"
+            android:layout_marginEnd="5dp"/>
 
         <TextView
+            android:background="@drawable/rounded_color_white"
             android:id="@+id/avgTextView"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
             android:text="Avg"
             android:textColor="#0000FF"
-            android:textSize="13dp"
-            android:gravity="center"/>
+            android:textSize="15sp"
+            android:gravity="center"
+            android:layout_marginEnd="5dp"/>
 
     </LinearLayout>
 

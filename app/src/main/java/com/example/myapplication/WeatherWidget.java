@@ -38,16 +38,11 @@ import java.util.Locale;
  */
 public class WeatherWidget extends AppWidgetProvider {
     private static final String[] GROUP_KEYS = {"temp", "press", "wind", "rain", "solar", "hum"};
-
     public static String selectedKey_;
     public static String savedUnit;
-
     public static String value_pub;
-
     private static final UnitConverter unitConverter = new UnitConverter();
-
     private final List<MinMaxAngValues> minMaxAngValues_arr = new ArrayList<>();
-
     static void updateAppWidget(Context context, AppWidgetManager appWidgetManager,
                                 int appWidgetId, String selectedKey, String value, double min, double max, double avg) {
         // Získání RemoteViews pro widget
@@ -58,9 +53,30 @@ public class WeatherWidget extends AppWidgetProvider {
 
         String username = SharedPreferencesManager.getUsernameFromSharedPreferences(context);
         String password = SharedPreferencesManager.getDecodedPasswordFromSharedPreferences(context);
-        System.out.println("USERNAME: " + username);
-        System.out.println("PASSWORD " + password);
         sendLoginRequest(context, username, password);
+
+
+        // Nastavit OnClickListener pro tlačítko s nastavením
+        Intent settingsIntent = new Intent(context, Widget_settings.class);
+        PendingIntent settingsPendingIntent = PendingIntent.getActivity(context, 0, settingsIntent, PendingIntent.FLAG_UPDATE_CURRENT);
+        views.setOnClickPendingIntent(R.id.settingsButton, settingsPendingIntent);
+
+
+        /*
+        // Nastavit OnClickListener pro tlačítko s aktualizací
+        Intent updateIntent = new Intent(context, WeatherWidget.class);
+        updateIntent.setAction("com.example.myapplication.UPDATE_WIDGET");
+        updateIntent.putExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, appWidgetId);
+        updateIntent.putExtra("SELECTED_KEY", selectedKey);
+
+        PendingIntent updatePendingIntent = PendingIntent.getBroadcast(context, appWidgetId, updateIntent, PendingIntent.FLAG_IMMUTABLE);
+        views.setOnClickPendingIntent(R.id.refreshButton, updatePendingIntent);
+
+         */
+
+        System.out.println("updateAppWidget : " + savedUnit);
+
+
 
         String translatedValue = "";
         String savedUnit_original = "";
@@ -110,17 +126,17 @@ public class WeatherWidget extends AppWidgetProvider {
 
         views.setTextViewText(R.id.keyTextView, translatedValue);
 
-
+        System.out.println("updateAppWidget 2: " + savedUnit);
 
         selectedKey_ = selectedKey;
 
         SharedPreferences sharedPreferences = context.getSharedPreferences("unit_settings", Context.MODE_PRIVATE);
-        savedUnit = "";
+        //String savedUnit = "";
         for (String groupKey : GROUP_KEYS) {
-            if (selectedKey.contains(groupKey)) {
-                System.out.println("VALUE: " + groupKey);
+            if (selectedKey_.contains(groupKey)) {
+                //System.out.println("VALUE: " + groupKey);
                 savedUnit = sharedPreferences.getString("unit___" + groupKey.toLowerCase(), "");
-                System.out.println("Saved unit: " + savedUnit);
+                //System.out.println("Saved unit: " + savedUnit);
                 if (selectedKey.contains("hum"))
                 {
                     savedUnit = "%";
@@ -136,21 +152,17 @@ public class WeatherWidget extends AppWidgetProvider {
             }
         }
 
-
-
         // Vytvoření Intentu pro spuštění po kliknutí na text ve widgetu
 
         Intent intent = new Intent(context, Weather_layout.class);
+        intent.putExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, appWidgetId);
         intent.putExtra("weather", translatedValue);
         intent.putExtra("jsonObject", selectedKey);
-        intent.putExtra("unit", savedUnit_original);
+        intent.putExtra("unit", savedUnit);
         intent.putExtra("convert_unit", savedUnit);
         intent.putExtra("original_unit", savedUnit_original);
 
-        // Přidání identifikátoru widgetu jako extra do Intentu
-        intent.putExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, appWidgetId);
-
-        PendingIntent pendingIntent = PendingIntent.getActivity(context, appWidgetId, intent, PendingIntent.FLAG_IMMUTABLE);
+        PendingIntent pendingIntent = PendingIntent.getActivity(context, appWidgetId, intent, PendingIntent.FLAG_UPDATE_CURRENT);
         views.setOnClickPendingIntent(R.id.keyTextView, pendingIntent);
 
         views.setTextViewText(R.id.valueTextView, Math.round(unitConverter.convertValueToSavedUnit(Double.parseDouble(value), savedUnit_original, savedUnit)) + " " + savedUnit);
@@ -159,9 +171,11 @@ public class WeatherWidget extends AppWidgetProvider {
         views.setTextViewText(R.id.maxTextView, "max: " + Math.round(unitConverter.convertValueToSavedUnit(max, savedUnit_original, savedUnit)) + " " + savedUnit);
         views.setTextViewText(R.id.avgTextView, "avg: " + Math.round(unitConverter.convertValueToSavedUnit(avg, savedUnit_original, savedUnit)) + " " + savedUnit);
 
-        System.out.println("VALUE: " + value);
-        System.out.println("savedUnit: " + savedUnit);
-        System.out.println("selectedKey: " + selectedKey);
+        System.out.println("weather" + translatedValue);
+        System.out.println("jsonObject" + selectedKey);
+        System.out.println("unit" + savedUnit);//
+        System.out.println("convert_unit" + savedUnit);//
+        System.out.println("original_unit" + savedUnit_original);
         // Instruct the widget manager to update the widget
         appWidgetManager.updateAppWidget(appWidgetId, views);
     }
@@ -175,6 +189,16 @@ public class WeatherWidget extends AppWidgetProvider {
         intent.putExtra("unit", savedUnit);
         intent.putExtra("convert_unit", savedUnit);
         intent.putExtra("original_unit", savedUnit);
+
+        System.out.println("weather _ " + selectedKey_);
+        System.out.println("jsonObject _ " + selectedKey_);
+        System.out.println("unit _ " + savedUnit);
+        System.out.println("convert_unit _ " + savedUnit);
+        System.out.println("original_unit _ " + savedUnit);
+
+        System.out.println("onTextClick : " + savedUnit);
+
+
         intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
         context.startActivity(intent);
     }
@@ -186,21 +210,42 @@ public class WeatherWidget extends AppWidgetProvider {
             // Načíst vybraný klíč pro daný widget ID
             String selectedKey = WeatherWidgetConfigureActivity.loadSelectedKeyPref(context, appWidgetId);
 
+            // Přidání OnClickListener pro tlačítko refreshButton
+            RemoteViews views = new RemoteViews(context.getPackageName(), R.layout.weather_widget);
+            Intent updateIntent = new Intent(context, WeatherWidget.class);
+            updateIntent.setAction("com.example.myapplication.UPDATE_WIDGET");
+            updateIntent.putExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, appWidgetId);
+            updateIntent.putExtra("SELECTED_KEY", selectedKey);
+            updateIntent.putExtra("unit", savedUnit);
+            PendingIntent updatePendingIntent = PendingIntent.getBroadcast(context, appWidgetId, updateIntent, PendingIntent.FLAG_UPDATE_CURRENT);
+            views.setOnClickPendingIntent(R.id.refreshButton, updatePendingIntent);
 
+
+            System.out.println("onUpdate : " + savedUnit);
+
+            // Aktualizace layoutu widgetu
+            //appWidgetManager.updateAppWidget(appWidgetId, views);
+
+            // Získání dat pro zobrazení
             getDataFromApiByKey(context, selectedKey, appWidgetManager, appWidgetId);
-
             getDataFromApiByKeyAVG(context, selectedKey, appWidgetManager, appWidgetId);
+
+            //setWidgetUpdateAlarm(context);
+
+            appWidgetManager.updateAppWidget(appWidgetId, views);
         }
 
         // Nastavit opakující se aktualizaci pomocí AlarmManageru
-        setWidgetUpdateAlarm(context);
+        //setWidgetUpdateAlarm(context);
+
+        System.out.println("onUpdate 2: " + savedUnit);
     }
 
     private void setWidgetUpdateAlarm(Context context) {
         // Nastavit Intent pro spuštění Broadcast receiveru
         Intent alarmIntent = new Intent(context, WeatherWidget.class);
         alarmIntent.setAction(AppWidgetManager.ACTION_APPWIDGET_UPDATE);
-        PendingIntent pendingIntent = PendingIntent.getBroadcast(context, 0, alarmIntent, PendingIntent.FLAG_UPDATE_CURRENT);
+        PendingIntent pendingIntent = PendingIntent.getBroadcast(context, 0, alarmIntent, PendingIntent.FLAG_MUTABLE);
 
         // Nastavit opakující se aktualizaci každých 10 minut
         AlarmManager alarmManager = (AlarmManager) context.getSystemService(Context.ALARM_SERVICE);
@@ -225,6 +270,7 @@ public class WeatherWidget extends AppWidgetProvider {
     public void onDisabled(Context context) {
         // Enter relevant functionality for when the last widget is disabled
     }
+
 
     @Override
     public void onReceive(Context context, Intent intent) {
@@ -362,34 +408,36 @@ public class WeatherWidget extends AppWidgetProvider {
             // Create JSON object from the response
             JSONArray jsonArray = new JSONArray(jsonResponse);
 
-            double sum = 0;
-            double min = Double.MAX_VALUE;
-            double max = 0;
-            double avg = 0;
+            if (jsonArray.length() != 0) {
+                double sum = 0;
+                double min = Double.MAX_VALUE;
+                double max = 0;
+                double avg = 0;
 
-            for (int i = 0; i < jsonArray.length(); i++) {
-                JSONObject jsonObject = jsonArray.getJSONObject(i);
-                double value = jsonObject.getDouble(selectedKey);
-                sum += value;
-                if (value < min) {
-                    min = value;
+                for (int i = 0; i < jsonArray.length(); i++) {
+                    JSONObject jsonObject = jsonArray.getJSONObject(i);
+                    double value = jsonObject.getDouble(selectedKey);
+                    sum += value;
+                    if (value < min) {
+                        min = value;
+                    }
+                    if (value > max) {
+                        max = value;
+                    }
                 }
-                if (value > max) {
-                    max = value;
-                }
+
+                avg = sum / jsonArray.length();
+                DecimalFormat df = new DecimalFormat("#.##");
+                df.setDecimalSeparatorAlwaysShown(false);
+                df.setDecimalFormatSymbols(DecimalFormatSymbols.getInstance(Locale.US));
+                avg = Double.parseDouble(df.format(avg));
+
+                //MinMaxAngValues m = new MinMaxAngValues(selectedKey, min, max, avg);
+                //minMaxAngValues_arr.add(m);
+
+                // Aktualizace widgetu s novou hodnotou
+                updateAppWidget(context, appWidgetManager, appWidgetId, selectedKey, value_, min, max, avg);
             }
-
-            avg = sum / jsonArray.length();
-            DecimalFormat df = new DecimalFormat("#.##");
-            df.setDecimalSeparatorAlwaysShown(false);
-            df.setDecimalFormatSymbols(DecimalFormatSymbols.getInstance(Locale.US));
-            avg = Double.parseDouble(df.format(avg));
-
-            //MinMaxAngValues m = new MinMaxAngValues(selectedKey, min, max, avg);
-            //minMaxAngValues_arr.add(m);
-
-            // Aktualizace widgetu s novou hodnotou
-            updateAppWidget(context, appWidgetManager, appWidgetId, selectedKey, value_, min, max, avg);
 
         } catch (JSONException e) {
             e.printStackTrace();
@@ -431,7 +479,7 @@ public class WeatherWidget extends AppWidgetProvider {
                     // Zpracování odpovědi
                     int responseCode = connection.getResponseCode();
                     if (responseCode == HttpURLConnection.HTTP_OK) {
-                        System.out.println("Login successful!");
+                        //System.out.println("Login successful!");
                         // Pokud je odpověď 200, zpracujeme access_token a uložíme ho do SharedPreferences
                         InputStream inputStream = connection.getInputStream();
                         BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream));

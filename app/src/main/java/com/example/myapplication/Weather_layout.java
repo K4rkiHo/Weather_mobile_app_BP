@@ -59,6 +59,7 @@ import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
+import java.util.TimeZone;
 
 public class Weather_layout extends AppCompatActivity {
 
@@ -114,6 +115,10 @@ public class Weather_layout extends AppCompatActivity {
         original_unit = intent.getStringExtra("original_unit");
 
         System.out.println("JsonObject: " + jsonString);
+        System.out.println("unit: " + unit);
+        System.out.println("weather: " + weather);
+        System.out.println("convert_unit: " + convert_unit);
+        System.out.println("original_unit: " + original_unit);
 
         //String[] parts = unit.split(" ");
         //parts[1]
@@ -307,12 +312,19 @@ public class Weather_layout extends AppCompatActivity {
                 double value = jsonObject.getDouble(jsonString);
                 date = jsonObject.getString("time");
 
-                // Zaokrouhlení hodnoty na jedno desetinné místo
-                float roundedValue = (Math.round(value * 10.0f) / 10.0f);
-
                 double convertedValue = unitConverter.convertValueToSavedUnit(value, original_unit, convert_unit);
 
-                seriesData.add(new CustomWeatherDataEntry(String.valueOf(i) + "h", Math.round(convertedValue)));
+                int hour = getHourFromTimeString(date);
+
+                //System.out.println("HOUR: " + hour);
+                if (i == hour) {
+                    //System.out.println("HOUR2: " + hour);
+                    seriesData.add(new CustomWeatherDataEntry(String.valueOf(i) + "h", Math.round(convertedValue)));
+                } else {
+                    seriesData.add(new CustomWeatherDataEntry(String.valueOf(i) + "h", 0));
+                }
+
+                //seriesData.add(new CustomWeatherDataEntry(String.valueOf(i) + "h", Math.round(convertedValue)));
 
                 // Aktualizace sumy pro výpočet průměru
                 sum += value;
@@ -375,6 +387,25 @@ public class Weather_layout extends AppCompatActivity {
         }
     }
 
+    private static int getHourFromTimeString(String timeString) {
+        try {
+            SimpleDateFormat inputDateFormat = new SimpleDateFormat("E, dd MMM yyyy HH:mm:ss z", Locale.ENGLISH);
+            inputDateFormat.setTimeZone(TimeZone.getTimeZone("GMT"));
+            Date date = inputDateFormat.parse(timeString);
+
+            // Nastavíme časové pásmo na GMT+2
+            SimpleDateFormat outputDateFormat = new SimpleDateFormat("HH");
+            outputDateFormat.setTimeZone(TimeZone.getTimeZone("GMT"));
+
+            // Získáme hodinu z datumu
+            return Integer.parseInt(outputDateFormat.format(date));
+        } catch (ParseException e) {
+            e.printStackTrace();
+            // Pokud selže, vrátíme hodnotu -1 nebo něco jiného, co vám vyhovuje jako indikátor chyby.
+            return -1;
+        }
+    }
+
     private void getDataBydate(String date) {
         new Thread(new Runnable() {
             @Override
@@ -427,14 +458,15 @@ public class Weather_layout extends AppCompatActivity {
             anyChartView.setVisibility(View.VISIBLE);
             JSONArray jsonArray = new JSONArray(jsonResponse);
             List<DataEntry> seriesData = new ArrayList<>();
-            // Inicializace ArrayListu pro uchování dat pro graf
-            ArrayList<Entry> entries = new ArrayList<>();
+            List<Integer> hours = new ArrayList<>();
+            hours.add(0);
+
             String date = "";
             double sum = 0;
             double min = Double.MAX_VALUE;
             double max = Double.MIN_VALUE;
 
-            if (jsonArray.length() == 0 ) {
+            if (jsonArray.length() == 0) {
                 // Pole jsonArray je prázdné, vypište chybu
                 runOnUiThread(new Runnable() {
                     @Override
@@ -451,17 +483,14 @@ public class Weather_layout extends AppCompatActivity {
                 return; // Ukončíme zpracování dat, protože nejsou k dispozici žádné položky
             }
 
-             
-
             // Procházení všech objektů v poli
             for (int i = 0; i < jsonArray.length(); i++) {
                 JSONObject jsonObject = jsonArray.getJSONObject(i);
 
-                System.out.println("JSON OBJECT: " + jsonObject.toString());
+                //System.out.println("JSON OBJECT: " + jsonObject.toString());
 
                 // Získání hodnoty z JSON objektu
                 double value = jsonObject.getDouble(jsonString);
-
 
                 date = jsonObject.getString("time");
 
@@ -470,11 +499,13 @@ public class Weather_layout extends AppCompatActivity {
 
                 double convertedValue = unitConverter.convertValueToSavedUnit(value, original_unit, convert_unit);
 
-                seriesData.add(new CustomWeatherDataEntry(String.valueOf(i) + "h", Math.round(convertedValue)));
+                int hour = getHourFromTimeString(date);
 
-                // Přidání nového bodu do seznamu bodů pro graf
-                entries.add(new Entry(i, roundedValue));
-
+                if (!hours.contains(hour)) {
+                    hours.add(hour);
+                    System.out.println("Added to hours!");
+                    seriesData.add(new CustomWeatherDataEntry(String.valueOf(hour) + "h", Math.round(convertedValue)));
+                }
 
                 // Aktualizace sumy pro výpočet průměru
                 sum += value;
@@ -487,6 +518,14 @@ public class Weather_layout extends AppCompatActivity {
                     max = value;
                 }
             }
+
+            // Doplnění nulových hodnot pro chybějící hodiny
+            for (int hour = 0; hour <= 23; hour++) {
+                if (!hours.contains(hour)) {
+                    seriesData.add(new CustomWeatherDataEntry(String.valueOf(hour) + "h", 0));
+                }
+            }
+
             double average = sum / jsonArray.length();
 
             textViewAverage.setText("Avg: " + Math.round(unitConverter.convertValueToSavedUnit(average, original_unit, convert_unit )) + " " + convert_unit);
@@ -494,6 +533,11 @@ public class Weather_layout extends AppCompatActivity {
             textViewMin.setText("Min: " + Math.round(unitConverter.convertValueToSavedUnit(min,original_unit, convert_unit)) + " " + convert_unit);
 
             textViewMax.setText("Max: " + Math.round(unitConverter.convertValueToSavedUnit(max, original_unit, convert_unit)) + " " + convert_unit);
+
+            for (int x : hours)
+            {
+                System.out.println("HOURS: " + x);
+            }
 
             //new data graph
             Set set = Set.instantiate();
@@ -516,6 +560,8 @@ public class Weather_layout extends AppCompatActivity {
             cartesian.legend().padding(0d, 0d, 10d, 0d);
 
             cartesian.xScroller(true);
+
+            hours.clear();
 
             //anyChartView.setChart(cartesian);
 

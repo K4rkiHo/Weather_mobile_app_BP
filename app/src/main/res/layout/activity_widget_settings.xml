@@ -4,8 +4,7 @@
     android:layout_height="match_parent"
     android:orientation="vertical"
     android:padding="16dp"
-    android:background="@drawable/mountain3"
-    android:id="@+id/LinLayout">
+    android:background="@drawable/mountain3">
 
     <TextView
         android:textColor="@color/black"
@@ -28,6 +27,6 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginTop="8dp"
-        android:text="@string/add_widget" />
+        android:text="Set weather data" />
 
 </LinearLayout>

@@ -25,6 +25,9 @@ import com.anychart.enums.Anchor;
 import com.anychart.enums.MarkerType;
 import com.anychart.graphics.vector.Stroke;
 import com.github.mikephil.charting.charts.LineChart;
+import com.google.android.material.button.MaterialButton;
+import com.google.android.material.datepicker.CalendarConstraints;
+import com.google.android.material.datepicker.MaterialDatePicker;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -136,6 +139,7 @@ public class History_data extends AppCompatActivity {
         });
 
     }
+
     private void getDataFrom(String selected) {
         new Thread(new Runnable() {
             @Override
@@ -186,6 +190,9 @@ public class History_data extends AppCompatActivity {
         try {
             JSONArray jsonArray = new JSONArray(jsonResponse);
             List<DataEntry> seriesData = new ArrayList<>();
+
+
+
 
 
 
@@ -270,7 +277,6 @@ public class History_data extends AppCompatActivity {
 
                             // Přidání názvu měsíce do datové struktury
                             seriesData.add(new CustomWeatherDataEntry(monthName, Math.round(convertedValue))); // Přidání názvu měsíce
-
                         }
                     }
                 }
@@ -316,6 +322,8 @@ public class History_data extends AppCompatActivity {
             cartesian.legend().padding(0d, 0d, 10d, 0d);
 
             cartesian.xScroller(true);
+
+            seriesData.clear();
 
         } catch (JSONException e) {
             e.printStackTrace();
