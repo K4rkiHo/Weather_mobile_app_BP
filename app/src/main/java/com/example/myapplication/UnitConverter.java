@@ -27,8 +27,8 @@ public class UnitConverter {
                 return value * 25.4; // Převod z inHg na mmHg
             } else if (savedUnit.equals("atm")) {
                 return value * 0.0334211; // Převod z inHg na atm
-            } else if (savedUnit.equals("bar")) {
-                return value * 0.0334211; // Převod z inHg na bar
+            } else if (savedUnit.equals("mbar")) {
+                return value * 33.863886666667; // Převod z inHg na mbar
             }
         } else if (originalUnit.equals("hPa")) {
             if (savedUnit.equals("inHg")) {
@@ -42,9 +42,9 @@ public class UnitConverter {
             if (savedUnit.equals("inHg")) {
                 return value / 0.0334211; // Převod z atm na inHg
             }
-        } else if (originalUnit.equals("bar")) {
+        } else if (originalUnit.equals("mbar")) {
             if (savedUnit.equals("inHg")) {
-                return value / 0.0334211; // Převod z bar na inHg
+                return value / 33.863886666667; // Převod z mbar na inHg
             }
         }
 

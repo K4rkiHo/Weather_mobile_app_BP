@@ -7,6 +7,7 @@ import androidx.drawerlayout.widget.DrawerLayout;
 import android.app.DatePickerDialog;
 import android.content.Context;
 import android.content.Intent;
+import android.content.res.Configuration;
 import android.graphics.Color;
 import android.os.Bundle;
 import android.view.View;
@@ -20,13 +21,19 @@ import com.anychart.AnyChartView;
 import com.anychart.chart.common.dataentry.DataEntry;
 import com.anychart.chart.common.dataentry.ValueDataEntry;
 import com.anychart.charts.Cartesian;
+import com.anychart.charts.Scatter;
 import com.anychart.core.cartesian.series.Line;
+import com.anychart.core.scatter.series.Marker;
 import com.anychart.data.Mapping;
 import com.anychart.data.Set;
 import com.anychart.enums.Anchor;
+import com.anychart.enums.HoverMode;
 import com.anychart.enums.MarkerType;
+import com.anychart.enums.TooltipDisplayMode;
 import com.anychart.enums.TooltipPositionMode;
+import com.anychart.graphics.vector.SolidFill;
 import com.anychart.graphics.vector.Stroke;
+import com.anychart.graphics.vector.text.HAlign;
 import com.github.mikephil.charting.charts.LineChart;
 import com.github.mikephil.charting.components.AxisBase;
 import com.github.mikephil.charting.components.Description;
@@ -84,6 +91,8 @@ public class Weather_layout extends AppCompatActivity {
 
     private boolean dataForTodayCalled = false;
 
+    Scatter scatter;
+
 
     List<DataEntry> seriesData = new ArrayList<>();
 
@@ -92,10 +101,14 @@ public class Weather_layout extends AppCompatActivity {
 
     private UnitConverter unitConverter = new UnitConverter();
 
+    private boolean scatter_input = false;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_weather_layout);
+
+
 
         textView_test = findViewById(R.id.textView);
 
@@ -124,17 +137,64 @@ public class Weather_layout extends AppCompatActivity {
         //parts[1]
         String unit_ = unit;
 
-
         anyChartView = findViewById(R.id.any_chart_view);
         anyChartView.setProgressBar(findViewById(R.id.progress_bar));
 
 
+        if(jsonString == "wind_angle")
+        {
+            scatter_input = true;
+            scatter = AnyChart.scatter();
+            scatter.animation(true);
+
+            scatter.title("System interruptions");
+
+            scatter.xScale()
+                    .minimum(1.5d)
+                    .maximum(5.5d);
+//        scatter.xScale().tick
+            scatter.yScale()
+                    .minimum(40d)
+                    .maximum(100d);
+
+            scatter.yAxis(0).title("Waiting time between interruptions (Min)");
+            scatter.xAxis(0)
+                    .title("Interruption duration (Min)")
+                    .drawFirstLabel(false)
+                    .drawLastLabel(false);
+
+            scatter.interactivity()
+                    .hoverMode(HoverMode.BY_SPOT)
+                    .spotRadius(30d);
+
+            scatter.tooltip().displayMode(TooltipDisplayMode.UNION);
+        }
 
 
-        cartesian = AnyChart.line();
 
-        cartesian.animation(true);
 
+        int nightModeFlags = getResources().getConfiguration().uiMode & Configuration.UI_MODE_NIGHT_MASK;
+
+        // Porovnání s konstantou pro zapnutí temného režimu
+        if (nightModeFlags == Configuration.UI_MODE_NIGHT_YES) {
+
+            cartesian = AnyChart.line();
+            cartesian.background().fill("#3b3b3b");
+            cartesian.xAxis(0).labels().fontColor("#000000");
+            cartesian.yAxis(0).labels().fontColor("#000000");
+            cartesian.xAxis(0).stroke("#000000");
+            cartesian.yAxis(0).stroke("#000000");
+            cartesian.xAxis(0).ticks().stroke("#000000");
+            cartesian.yAxis(0).ticks().stroke("#000000");
+
+            cartesian.legend().fontColor("#FF000000");
+            // Temné téma je zapnuté
+            // Sem můžeš vložit kód, který se má provést, když je temné téma zapnuté
+        } else {
+            cartesian = AnyChart.line();
+            // Temné téma není zapnuté
+            // Sem můžeš vložit kód, který se má provést, když temné téma není zapnuté
+        }
 
         cartesian.padding(10d, 10d, 10d, 10d);
 
@@ -168,14 +228,6 @@ public class Weather_layout extends AppCompatActivity {
 
         textView_test.setText(weather);
         getDataForToday();
-        /*
-        if (!dataForTodayCalled) {
-            getDataForToday();
-            dataForTodayCalled = true; // Nastavit, že metoda byla zavolána
-            //cartesian.removeAllSeries();
-        }
-
-         */
 
         calendar = findViewById(R.id.button_calendar);
         calendar.setOnClickListener(v -> {
@@ -199,7 +251,7 @@ public class Weather_layout extends AppCompatActivity {
             public void run() {
                 // Získání uložené IP adresy z SharedPreferences
                 String ipAddress = SharedPreferencesManager.getIpAddressFromSharedPreferences(Weather_layout.this);
-                String apiUrl = "http://" + ipAddress + ":5000/api/data/aggregated/today";
+                String apiUrl = "http://" + ipAddress + ":5000/api/data/meteostation/today";
 
                 // Odeslání požadavku na server
                 try {
@@ -237,6 +289,22 @@ public class Weather_layout extends AppCompatActivity {
                 }
             }
         }).start();
+    }
+
+    public static String convertToClassicTime(String inputDate) {
+        String outputDate = "";
+        try {
+            SimpleDateFormat inputFormat = new SimpleDateFormat("EEE, dd MMM yyyy HH:mm:ss z", Locale.ENGLISH);
+            inputFormat.setTimeZone(TimeZone.getTimeZone("GMT"));
+            Date date = inputFormat.parse(inputDate);
+
+            SimpleDateFormat outputFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.ENGLISH);
+            outputFormat.setTimeZone(TimeZone.getTimeZone("GMT")); // Nastavíme časovou zónu na GMT
+            outputDate = outputFormat.format(date);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return outputDate;
     }
     private void processJsonResponse(String jsonResponse) {
         try {
@@ -308,21 +376,33 @@ public class Weather_layout extends AppCompatActivity {
             for (int i = 0; i < jsonArray.length(); i++) {
                 JSONObject jsonObject = jsonArray.getJSONObject(i);
 
+                System.out.println("JSON OBJECT: " + jsonObject.toString());
+
                 // Získání hodnoty z JSON objektu
                 double value = jsonObject.getDouble(jsonString);
                 date = jsonObject.getString("time");
 
                 double convertedValue = unitConverter.convertValueToSavedUnit(value, original_unit, convert_unit);
 
+                //DecimalFormat decimalFormat = new DecimalFormat("#.##");
+                double roundedValue = Math.round(convertedValue * 10.0) / 10.0;
+                //String formattedValue = decimalFormat.format(roundedValue);
+
                 int hour = getHourFromTimeString(date);
 
+                String date_cl = convertToClassicTime(date);
+
+                seriesData.add(new CustomWeatherDataEntry(date_cl, roundedValue));
                 //System.out.println("HOUR: " + hour);
+                /*
                 if (i == hour) {
                     //System.out.println("HOUR2: " + hour);
                     seriesData.add(new CustomWeatherDataEntry(String.valueOf(i) + "h", Math.round(convertedValue)));
                 } else {
                     seriesData.add(new CustomWeatherDataEntry(String.valueOf(i) + "h", 0));
                 }
+
+                 */
 
                 //seriesData.add(new CustomWeatherDataEntry(String.valueOf(i) + "h", Math.round(convertedValue)));
 
@@ -350,11 +430,21 @@ public class Weather_layout extends AppCompatActivity {
 
             //textViewDate.setText("Date: " + date);
 
-            textViewAverage.setText("Avg: " + Math.round(unitConverter.convertValueToSavedUnit(average, original_unit, convert_unit )) + " " + convert_unit);
+            double convertedValueavg = unitConverter.convertValueToSavedUnit(average, original_unit, convert_unit);
+            double roundedValueavg = Math.round(convertedValueavg * 10.0) / 10.0;
 
-            textViewMin.setText("Min: " + Math.round(unitConverter.convertValueToSavedUnit(min,original_unit, convert_unit)) + " " + convert_unit);
+            double convertedValueMin = unitConverter.convertValueToSavedUnit(min, original_unit, convert_unit);
+            double convertedValueMax = unitConverter.convertValueToSavedUnit(max, original_unit, convert_unit);
 
-            textViewMax.setText("Max: " + Math.round(unitConverter.convertValueToSavedUnit(max, original_unit, convert_unit)) + " " + convert_unit);
+            double roundedValuemin = Math.round(convertedValueMin * 10.0) / 10.0;
+            double roundedValuemax = Math.round(convertedValueMax * 10.0) / 10.0;
+
+
+            textViewAverage.setText("Avg: " + roundedValueavg + " " + convert_unit);
+
+            textViewMin.setText("Min: " + roundedValuemin + " " + convert_unit);
+
+            textViewMax.setText("Max: " + roundedValuemax + " " + convert_unit);
             //cartesian.removeAllSeries();
             //new data graph
 
@@ -412,7 +502,7 @@ public class Weather_layout extends AppCompatActivity {
             public void run() {
                 // Získání uložené IP adresy z SharedPreferences
                 String ipAddress = SharedPreferencesManager.getIpAddressFromSharedPreferences(Weather_layout.this);
-                String apiUrl = "http://" + ipAddress + ":5000/api/data/aggregated/" + date;
+                String apiUrl = "http://" + ipAddress + ":5000/api/data/meteostation/" + date;
 
                 // Odeslání požadavku na server
                 try {
@@ -494,18 +584,22 @@ public class Weather_layout extends AppCompatActivity {
 
                 date = jsonObject.getString("time");
 
-                // Zaokrouhlení hodnoty na jedno desetinné místo
-                float roundedValue = (Math.round(value * 10.0f) / 10.0f);
-
                 double convertedValue = unitConverter.convertValueToSavedUnit(value, original_unit, convert_unit);
-
+                double roundedValue = Math.round(convertedValue * 10.0) / 10.0;
                 int hour = getHourFromTimeString(date);
 
+                String date_cl = convertToClassicTime(date);
+
+                seriesData.add(new CustomWeatherDataEntry(date_cl, roundedValue));
+
+                /*
                 if (!hours.contains(hour)) {
                     hours.add(hour);
                     System.out.println("Added to hours!");
                     seriesData.add(new CustomWeatherDataEntry(String.valueOf(hour) + "h", Math.round(convertedValue)));
                 }
+
+                 */
 
                 // Aktualizace sumy pro výpočet průměru
                 sum += value;
@@ -519,6 +613,7 @@ public class Weather_layout extends AppCompatActivity {
                 }
             }
 
+            /*
             // Doplnění nulových hodnot pro chybějící hodiny
             for (int hour = 0; hour <= 23; hour++) {
                 if (!hours.contains(hour)) {
@@ -526,13 +621,25 @@ public class Weather_layout extends AppCompatActivity {
                 }
             }
 
+             */
+
             double average = sum / jsonArray.length();
 
-            textViewAverage.setText("Avg: " + Math.round(unitConverter.convertValueToSavedUnit(average, original_unit, convert_unit )) + " " + convert_unit);
+            double convertedValueavg = unitConverter.convertValueToSavedUnit(average, original_unit, convert_unit);
+            double roundedValueavg = Math.round(convertedValueavg * 10.0) / 10.0;
 
-            textViewMin.setText("Min: " + Math.round(unitConverter.convertValueToSavedUnit(min,original_unit, convert_unit)) + " " + convert_unit);
+            double convertedValueMin = unitConverter.convertValueToSavedUnit(min, original_unit, convert_unit);
+            double convertedValueMax = unitConverter.convertValueToSavedUnit(max, original_unit, convert_unit);
 
-            textViewMax.setText("Max: " + Math.round(unitConverter.convertValueToSavedUnit(max, original_unit, convert_unit)) + " " + convert_unit);
+            double roundedValuemin = Math.round(convertedValueMin * 10.0) / 10.0;
+            double roundedValuemax = Math.round(convertedValueMax * 10.0) / 10.0;
+
+
+            textViewAverage.setText("Avg: " + roundedValueavg + " " + convert_unit);
+
+            textViewMin.setText("Min: " + roundedValuemin + " " + convert_unit);
+
+            textViewMax.setText("Max: " + roundedValuemax + " " + convert_unit);
 
             for (int x : hours)
             {
@@ -600,6 +707,7 @@ public class Weather_layout extends AppCompatActivity {
                 String date = year + "-" + (month + 1) + "-" + day;
                 getDataBydate(date);
                 textViewDate.setText("Date: " + date);
+                System.out.println("Selected date: " + date);
             }
         }, year, month, day);
 

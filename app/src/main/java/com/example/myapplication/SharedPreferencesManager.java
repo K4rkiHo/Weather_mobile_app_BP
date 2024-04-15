@@ -138,46 +138,4 @@ public class SharedPreferencesManager {
         dataList.clear();
         dataList.addAll(orderedList);
     }
-
-    public static void loadOrderFromSharedPreferences_test(Context context, List<JsonObjectModel> dataList) {
-        SharedPreferences sharedPreferences = context.getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE);
-        String order = sharedPreferences.getString(LIST_ORDER, "");
-        String[] orderArray = order.split(",");
-
-        // Výpis orderArray
-        System.out.print("orderArray: ");
-        for (String item : orderArray) {
-            System.out.print(item + ", ");
-        }
-        System.out.println();
-
-        // Výpis order
-        System.out.println("order: " + order);
-
-        List<JsonObjectModel> orderedList = new ArrayList<>();
-
-        // Naplnění nového seznamu podle uloženého pořadí
-        for (String key : orderArray) {
-            System.out.println("key: " + key);
-            for (JsonObjectModel item : dataList) {
-                System.out.println("item.getId(): " + item.getId());
-                if (item.getId().equals(key)) {
-
-                    orderedList.add(item);
-                    break;
-                }
-            }
-        }
-
-        // Výpis orderedList
-        System.out.print("orderedList: ");
-        for (JsonObjectModel item : orderedList) {
-            System.out.print(item.getId() + ", ");
-        }
-        System.out.println();
-
-        dataList.clear();
-        dataList.addAll(orderedList);
-    }
-
 }

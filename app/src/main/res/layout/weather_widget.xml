@@ -3,22 +3,15 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@drawable/rounded_corners"
+    android:id="@+id/widget_container_main"
     android:theme="@style/Theme.MyApplication.AppWidgetContainer">
 
     <FrameLayout
         android:id="@+id/widget_container"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:background="@drawable/rounded_color_blue">
-
-        <Button
-            android:id="@+id/settingsButton"
-            android:layout_width="30dp"
-            android:layout_height="30dp"
-            android:layout_gravity="top|end"
-            android:layout_marginTop="12dp"
-            android:layout_marginEnd="12dp"
-            android:background="@drawable/ic_settings" />
+        android:background="@drawable/rounded_color_blue"
+        android:layout_above="@id/extraInfoLayout">
 
         <Button
             android:id="@+id/refreshButton"
@@ -53,14 +46,25 @@
                 android:layout_marginBottom="8dp"
                 android:textColor="@color/black"
                 android:text="Value"
-                android:textSize="40sp" />
+                android:textSize="38sp" />
+
+            <TextView
+                android:paddingTop="0dp"
+                android:id="@+id/valuedateTextView"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textColor="@color/black"
+                android:text="Value"
+                android:textSize="9sp" />
 
         </LinearLayout>
 
     </FrameLayout>
 
+
     <!-- Přidání dalších tří TextView pro min, max, avg -->
     <LinearLayout
+        android:id="@+id/extraInfoLayout"
         android:background="@drawable/rounded_corner_violet"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
@@ -79,8 +83,10 @@
             android:layout_weight="1"
             android:text="Min"
             android:textColor="#FF0000"
-            android:textSize="15sp"
+            android:textSize="13sp"
             android:gravity="center"
+            android:ellipsize="end"
+            android:maxLines="1"
             android:layout_marginEnd="5dp"/>
 
         <TextView
@@ -91,8 +97,10 @@
             android:layout_weight="1"
             android:text="Max"
             android:textColor="#006400"
-            android:textSize="15sp"
+            android:textSize="13sp"
             android:gravity="center"
+            android:ellipsize="end"
+            android:maxLines="1"
             android:layout_marginEnd="5dp"/>
 
         <TextView
@@ -103,8 +111,10 @@
             android:layout_weight="1"
             android:text="Avg"
             android:textColor="#0000FF"
-            android:textSize="15sp"
+            android:textSize="13sp"
             android:gravity="center"
+            android:ellipsize="end"
+            android:maxLines="1"
             android:layout_marginEnd="5dp"/>
 
     </LinearLayout>

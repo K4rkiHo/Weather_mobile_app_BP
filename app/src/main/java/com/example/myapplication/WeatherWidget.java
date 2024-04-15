@@ -9,9 +9,11 @@ import android.appwidget.AppWidgetProvider;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.content.res.Configuration;
 import android.os.Handler;
 import android.os.Looper;
 import android.view.View;
+import android.widget.RelativeLayout;
 import android.widget.RemoteViews;
 import android.widget.TextView;
 
@@ -28,9 +30,12 @@ import java.net.HttpURLConnection;
 import java.net.URL;
 import java.text.DecimalFormat;
 import java.text.DecimalFormatSymbols;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 import java.util.Locale;
+import java.util.TimeZone;
 
 /**
  * Implementation of App Widget functionality.
@@ -41,10 +46,13 @@ public class WeatherWidget extends AppWidgetProvider {
     public static String selectedKey_;
     public static String savedUnit;
     public static String value_pub;
+
+    public static String date_pub;
     private static final UnitConverter unitConverter = new UnitConverter();
     private final List<MinMaxAngValues> minMaxAngValues_arr = new ArrayList<>();
+    private static boolean isButtonClicked = false;
     static void updateAppWidget(Context context, AppWidgetManager appWidgetManager,
-                                int appWidgetId, String selectedKey, String value, double min, double max, double avg) {
+                                int appWidgetId, String selectedKey, String value, double min, double max, double avg, String date) {
         // Získání RemoteViews pro widget
         RemoteViews views = new RemoteViews(context.getPackageName(), R.layout.weather_widget);
         // Nastavení textu na základě vybraného klíče a hodnoty
@@ -56,10 +64,35 @@ public class WeatherWidget extends AppWidgetProvider {
         sendLoginRequest(context, username, password);
 
 
-        // Nastavit OnClickListener pro tlačítko s nastavením
-        Intent settingsIntent = new Intent(context, Widget_settings.class);
-        PendingIntent settingsPendingIntent = PendingIntent.getActivity(context, 0, settingsIntent, PendingIntent.FLAG_UPDATE_CURRENT);
-        views.setOnClickPendingIntent(R.id.settingsButton, settingsPendingIntent);
+        boolean basicbackground = SharedPreferencesManager.getBasicBackgroudFromSharedPreferences(context);
+        if (basicbackground)
+        {
+            views.setInt(R.id.widget_container_main, "setBackgroundResource", R.drawable.rounder_color_white_80);
+            views.setInt(R.id.widget_container,  "setBackgroundResource", R.drawable.rounded_color_white);
+            views.setInt(R.id.extraInfoLayout,  "setBackgroundResource", R.drawable.rounded_color_white);
+        }
+        else
+        {
+            views.setInt(R.id.widget_container_main, "setBackgroundResource", R.drawable.rounded_corners);
+            views.setInt(R.id.widget_container, "setBackgroundResource", R.drawable.rounded_color_blue);
+            views.setInt(R.id.extraInfoLayout, "setBackgroundResource", R.drawable.rounded_corner_violet);
+        }
+
+        boolean isDarkMode = (context.getResources().getConfiguration().uiMode & Configuration.UI_MODE_NIGHT_MASK) == Configuration.UI_MODE_NIGHT_YES;
+        if (isDarkMode)
+        {
+            views.setInt(R.id.widget_container_main, "setBackgroundResource",R.drawable.rounded_corner_black);
+            views.setInt(R.id.widget_container, "setBackgroundResource", R.drawable.rounded_corner_violet);
+            views.setInt(R.id.extraInfoLayout, "setBackgroundResource",R.drawable.rounded_corner_grey);
+            views.setTextColor(R.id.keyTextView, context.getResources().getColor(R.color.white));
+            views.setTextColor(R.id.valueTextView, context.getResources().getColor(R.color.white));
+
+        }
+        else
+        {
+            views.setTextColor(R.id.keyTextView, context.getResources().getColor(R.color.black));
+            views.setTextColor(R.id.valueTextView, context.getResources().getColor(R.color.black));
+        }
 
 
         /*
@@ -171,6 +204,8 @@ public class WeatherWidget extends AppWidgetProvider {
         views.setTextViewText(R.id.maxTextView, "max: " + Math.round(unitConverter.convertValueToSavedUnit(max, savedUnit_original, savedUnit)) + " " + savedUnit);
         views.setTextViewText(R.id.avgTextView, "avg: " + Math.round(unitConverter.convertValueToSavedUnit(avg, savedUnit_original, savedUnit)) + " " + savedUnit);
 
+        views.setTextViewText(R.id.valuedateTextView, convertToClassicTime(date));
+
         System.out.println("weather" + translatedValue);
         System.out.println("jsonObject" + selectedKey);
         System.out.println("unit" + savedUnit);//
@@ -178,6 +213,22 @@ public class WeatherWidget extends AppWidgetProvider {
         System.out.println("original_unit" + savedUnit_original);
         // Instruct the widget manager to update the widget
         appWidgetManager.updateAppWidget(appWidgetId, views);
+    }
+
+    public static String convertToClassicTime(String inputDate) {
+        String outputDate = "";
+        try {
+            SimpleDateFormat inputFormat = new SimpleDateFormat("EEE, dd MMM yyyy HH:mm:ss z", Locale.ENGLISH);
+            inputFormat.setTimeZone(TimeZone.getTimeZone("GMT"));
+            Date date = inputFormat.parse(inputDate);
+
+            SimpleDateFormat outputFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.ENGLISH);
+            outputFormat.setTimeZone(TimeZone.getTimeZone("GMT")); // Nastavíme časovou zónu na GMT
+            outputDate = outputFormat.format(date);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return outputDate;
     }
 
     public void onTextClick(View view) {
@@ -207,32 +258,35 @@ public class WeatherWidget extends AppWidgetProvider {
     public void onUpdate(Context context, AppWidgetManager appWidgetManager, int[] appWidgetIds) {
         // Spustit aktualizaci pro každý widget ID v seznamu appWidgetIds
         for (int appWidgetId : appWidgetIds) {
-            // Načíst vybraný klíč pro daný widget ID
-            String selectedKey = WeatherWidgetConfigureActivity.loadSelectedKeyPref(context, appWidgetId);
+            if (!isButtonClicked) {
+                // Načíst vybraný klíč pro daný widget ID
+                String selectedKey = WeatherWidgetConfigureActivity.loadSelectedKeyPref(context, appWidgetId);
 
-            // Přidání OnClickListener pro tlačítko refreshButton
-            RemoteViews views = new RemoteViews(context.getPackageName(), R.layout.weather_widget);
-            Intent updateIntent = new Intent(context, WeatherWidget.class);
-            updateIntent.setAction("com.example.myapplication.UPDATE_WIDGET");
-            updateIntent.putExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, appWidgetId);
-            updateIntent.putExtra("SELECTED_KEY", selectedKey);
-            updateIntent.putExtra("unit", savedUnit);
-            PendingIntent updatePendingIntent = PendingIntent.getBroadcast(context, appWidgetId, updateIntent, PendingIntent.FLAG_UPDATE_CURRENT);
-            views.setOnClickPendingIntent(R.id.refreshButton, updatePendingIntent);
+                // Přidání OnClickListener pro tlačítko refreshButton
+                RemoteViews views = new RemoteViews(context.getPackageName(), R.layout.weather_widget);
+                Intent updateIntent = new Intent(context, WeatherWidget.class);
+                updateIntent.setAction("com.example.myapplication.UPDATE_WIDGET");
+                updateIntent.putExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, appWidgetId);
+                updateIntent.putExtra("SELECTED_KEY", selectedKey);
+                updateIntent.putExtra("unit", savedUnit);
+                PendingIntent updatePendingIntent = PendingIntent.getBroadcast(context, appWidgetId, updateIntent, PendingIntent.FLAG_UPDATE_CURRENT);
+                views.setOnClickPendingIntent(R.id.refreshButton, updatePendingIntent);
 
 
-            System.out.println("onUpdate : " + savedUnit);
+                System.out.println("onUpdate : " + savedUnit);
 
-            // Aktualizace layoutu widgetu
-            //appWidgetManager.updateAppWidget(appWidgetId, views);
+                // Aktualizace layoutu widgetu
+                //appWidgetManager.updateAppWidget(appWidgetId, views);
 
-            // Získání dat pro zobrazení
-            getDataFromApiByKey(context, selectedKey, appWidgetManager, appWidgetId);
-            getDataFromApiByKeyAVG(context, selectedKey, appWidgetManager, appWidgetId);
+                // Získání dat pro zobrazení
+                getDataFromApiByKey(context, selectedKey, appWidgetManager, appWidgetId);
+                getDataFromApiByKeyAVG(context, selectedKey, appWidgetManager, appWidgetId);
 
-            //setWidgetUpdateAlarm(context);
+                //setWidgetUpdateAlarm(context);
 
-            appWidgetManager.updateAppWidget(appWidgetId, views);
+                appWidgetManager.updateAppWidget(appWidgetId, views);
+                isButtonClicked = true;
+            }
         }
 
         // Nastavit opakující se aktualizaci pomocí AlarmManageru
@@ -276,6 +330,7 @@ public class WeatherWidget extends AppWidgetProvider {
     public void onReceive(Context context, Intent intent) {
         super.onReceive(context, intent);
         if (intent.getAction() != null && intent.getAction().equals("com.example.myapplication.UPDATE_WIDGET")) {
+            isButtonClicked = false;
             int appWidgetId = intent.getIntExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, AppWidgetManager.INVALID_APPWIDGET_ID);
             String selectedKey = intent.getStringExtra("SELECTED_KEY");
             if (appWidgetId != AppWidgetManager.INVALID_APPWIDGET_ID && selectedKey != null) {
@@ -346,9 +401,10 @@ public class WeatherWidget extends AppWidgetProvider {
             double min = 0;
             double max = 0;
             double avg = 0;
+            date_pub = apiResponse.getString("time");
 
             // Aktualizace widgetu s novou hodnotou
-            updateAppWidget(context, appWidgetManager, appWidgetId, selectedKey, value, min, max, avg);
+            updateAppWidget(context, appWidgetManager, appWidgetId, selectedKey, value, min, max, avg, date_pub);
 
         } catch (JSONException e) {
             e.printStackTrace();
@@ -436,7 +492,7 @@ public class WeatherWidget extends AppWidgetProvider {
                 //minMaxAngValues_arr.add(m);
 
                 // Aktualizace widgetu s novou hodnotou
-                updateAppWidget(context, appWidgetManager, appWidgetId, selectedKey, value_, min, max, avg);
+                updateAppWidget(context, appWidgetManager, appWidgetId, selectedKey, value_, min, max, avg, date_pub);
             }
 
         } catch (JSONException e) {

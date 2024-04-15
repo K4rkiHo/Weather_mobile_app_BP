@@ -81,7 +81,7 @@ public class DashBoard extends AppCompatActivity {
             drawerLayout.setBackgroundColor(Color.parseColor("#FFFFFF"));
         }
 
-        SharedPreferencesManager.loadOrderFromSharedPreferences(this, dataList);
+
 
         recyclerView = findViewById(R.id.recyclerView);
 
@@ -109,8 +109,6 @@ public class DashBoard extends AppCompatActivity {
         ItemTouchHelper itemTouchHelper = new ItemTouchHelper(simpleCallback);
         itemTouchHelper.attachToRecyclerView(recyclerView);
 
-
-
         new Handler().postDelayed(new Runnable() {
             @Override
             public void run() {
@@ -119,10 +117,6 @@ public class DashBoard extends AppCompatActivity {
                 }
             }
         }, 1000);
-
-        SharedPreferencesManager.loadOrderFromSharedPreferences(this, dataList);
-
-        //SharedPreferencesManager.loadOrderFromSharedPreferences_test(this, dataList);
 
     }
 
@@ -213,7 +207,12 @@ public class DashBoard extends AppCompatActivity {
                         double value = apiResponse.optDouble(key, 0.0);
                         double convertedValue = unitConverter.convertValueToSavedUnit(value, unit, savedUnit);
                         // Zaokrouhlení hodnoty na celé číslo
-                        long roundedValue = Math.round(convertedValue);
+
+                        DecimalFormat decimalFormat = new DecimalFormat("#.##");
+                        double roundedValue = Math.round(convertedValue * 10.0) / 10.0;
+                        String formattedValue = decimalFormat.format(roundedValue);
+
+                        //long roundedValue = Math.round(convertedValue);
                         // Vytvoření nového objektu JsonObjectModel a přidání do seznamu
                         for (int i = 0; i < minMaxAngValues_arr.size(); i++) {
                             if (minMaxAngValues_arr.get(i).getStringValue().equals(key)) {
@@ -224,7 +223,7 @@ public class DashBoard extends AppCompatActivity {
 
                                  */
 
-                                    dataList.add(new JsonObjectModel(i + "", czechKey + " (" + savedUnit + ")", roundedValue + " " + savedUnit, key, "min: " + Math.round(unitConverter.convertValueToSavedUnit(minMaxAngValues_arr.get(i).getMinValue(), unit, savedUnit)) + " " + savedUnit, "max: " + Math.round(unitConverter.convertValueToSavedUnit(minMaxAngValues_arr.get(i).getMaxValue(), unit, savedUnit)) + " " + savedUnit, "avg: " + Math.round(unitConverter.convertValueToSavedUnit(minMaxAngValues_arr.get(i).getAvgValue(), unit, savedUnit)) + " " + savedUnit, savedUnit, unit));
+                                dataList.add(new JsonObjectModel(i + "", czechKey + " (" + savedUnit + ")", formattedValue + " " + savedUnit, key, "min: " + decimalFormat.format(unitConverter.convertValueToSavedUnit(minMaxAngValues_arr.get(i).getMinValue(), unit, savedUnit)) + " " + savedUnit, "max: " + decimalFormat.format(unitConverter.convertValueToSavedUnit(minMaxAngValues_arr.get(i).getMaxValue(), unit, savedUnit)) + " " + savedUnit, "avg: " + decimalFormat.format(unitConverter.convertValueToSavedUnit(minMaxAngValues_arr.get(i).getAvgValue(), unit, savedUnit)) + " " + savedUnit, savedUnit, unit));
 
                             } else {
                                 Log.e("Error", "Key not found");
@@ -233,7 +232,8 @@ public class DashBoard extends AppCompatActivity {
                     }
                 }
             }
-            SharedPreferencesManager.saveOrderToSharedPreferences(DashBoard.this, dataList);
+            //SharedPreferencesManager.saveOrderToSharedPreferences(DashBoard.this, dataList);
+            SharedPreferencesManager.loadOrderFromSharedPreferences(DashBoard.this, dataList);
             // Inicializace RecyclerView
             recyclerView.setLayoutManager(new LinearLayoutManager(this));
 
@@ -350,7 +350,7 @@ public class DashBoard extends AppCompatActivity {
                             // Získání hodnoty z JSON objektu
                             double value = jsonObject.getDouble(key);
 
-                            Log.d("JsonObjectModel : ", jsonObject + " ");
+                            //Log.d("JsonObjectModel : ", jsonObject + " ");
 
                             // Zaokrouhlení hodnoty na jedno desetinné místo
                             float roundedValue = (Math.round(value * 10.0f) / 10.0f);
@@ -488,10 +488,8 @@ public class DashBoard extends AppCompatActivity {
             int toPosition = target.getAdapterPosition();
 
             Collections.swap(dataList, fromPosition, toPosition);
-            recyclerView.getAdapter().notifyItemMoved(fromPosition, toPosition);
-
             SharedPreferencesManager.saveOrderToSharedPreferences(DashBoard.this, dataList);
-
+            recyclerView.getAdapter().notifyItemMoved(fromPosition, toPosition);
             return false;
         }
 
