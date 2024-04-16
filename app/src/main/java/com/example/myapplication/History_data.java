@@ -3,6 +3,7 @@ package com.example.myapplication;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.constraintlayout.widget.ConstraintLayout;
 
+import android.app.DatePickerDialog;
 import android.content.Intent;
 import android.graphics.Color;
 import android.os.Bundle;
@@ -10,6 +11,8 @@ import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.AutoCompleteTextView;
+import android.widget.Button;
+import android.widget.DatePicker;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -66,6 +69,9 @@ public class History_data extends AppCompatActivity {
     //private final List<DataEntry> seriesData = new ArrayList<>();
     private Cartesian cartesian;
     private AnyChartView anyChartView;
+    private Button calendar;
+
+    private String selected_item;
 
     private UnitConverter unitConverter = new UnitConverter();
 
@@ -130,23 +136,45 @@ public class History_data extends AppCompatActivity {
                 String selected = parent.getItemAtPosition(position).toString();
                 //seriesData.clear();
 
-                getDataFrom(selected);
-                anyChartView.setChart(cartesian);
+                selected_item = selected;
+                //getDataFrom(selected);
+                //anyChartView.setChart(cartesian);
 
 
                 //Toast.makeText(History_data.this, selected, Toast.LENGTH_SHORT).show();
             }
         });
 
+        calendar = findViewById(R.id.button_calendar);
+        calendar.setOnClickListener(v -> {
+            //cartesian.removeAllSeries();
+            openDialog();
+            anyChartView.setChart(cartesian);
+        });
+
     }
 
-    private void getDataFrom(String selected) {
+    private void getDataFrom(String selected, String date) {
+
         new Thread(new Runnable() {
             @Override
             public void run() {
+                String endpoint = "";
+                if (selected_item == "daily")
+                {
+                    endpoint = "daily_test";
+                }
+                else if (selected_item == "weekly")
+                {
+                    endpoint = "weekly_test";
+                }
+                else if (selected_item == "monthly")
+                {
+                    endpoint = "monthly_test";
+                }
                 // Získání uložené IP adresy z SharedPreferences
                 String ipAddress = SharedPreferencesManager.getIpAddressFromSharedPreferences(History_data.this);
-                String apiUrl = "http://" + ipAddress + ":5000/api/data/" + selected;
+                String apiUrl = "http://" + ipAddress + ":5000/api/data/" + endpoint + "/" + date;
 
                 // Odeslání požadavku na server
                 try {
@@ -191,11 +219,6 @@ public class History_data extends AppCompatActivity {
             JSONArray jsonArray = new JSONArray(jsonResponse);
             List<DataEntry> seriesData = new ArrayList<>();
 
-
-
-
-
-
             //List<DataEntry> seriesData_weather = new ArrayList<>();
 
             //seriesData.clear();
@@ -237,46 +260,25 @@ public class History_data extends AppCompatActivity {
                             SimpleDateFormat originalFormat = new SimpleDateFormat("EEE, dd MMM yyyy HH:mm:ss z", Locale.US);
                             Date date = originalFormat.parse(timestamp);
 
-                            // Nastavení kalendáře na získané datum
-                            Calendar calendar = Calendar.getInstance();
-                            calendar.setTime(date);
-
-                            // Nastavení na první den týdne
-                            calendar.set(Calendar.DAY_OF_WEEK, calendar.getFirstDayOfWeek());
-                            Date firstDayOfWeek = calendar.getTime();
-
-                            // Nastavení na poslední den týdne
-                            calendar.add(Calendar.DAY_OF_YEAR, 6); // Přidání 6 dní pro získání posledního dne týdne
-                            Date lastDayOfWeek = calendar.getTime();
-
-                            // Formátování prvního a posledního dne týdne
                             SimpleDateFormat targetFormat = new SimpleDateFormat("dd.MM.yyyy");
-                            String firstDayFormatted = targetFormat.format(firstDayOfWeek);
-                            String lastDayFormatted = targetFormat.format(lastDayOfWeek);
-
-                            // Vytvoření řetězce s rozmezím týdne
-                            String weekRange = firstDayFormatted + " - " + lastDayFormatted;
+                            String formattedDate = targetFormat.format(date);
 
                             // Přidání do datové struktury
-                            seriesData.add(new CustomWeatherDataEntry(weekRange, Math.round(convertedValue)));
+                            seriesData.add(new CustomWeatherDataEntry(formattedDate, Math.round(convertedValue)));
                         }
                         else if (item == "monthly")
                         {
                             // Získání hodnoty začátku následujícího měsíce ze získaných dat z API
-                            String timestamp = jsonObject.getString("next_month_start");
+                            String timestamp = jsonObject.getString("week_start");
                             SimpleDateFormat originalFormat = new SimpleDateFormat("EEE, dd MMM yyyy HH:mm:ss z", Locale.US);
                             Date date = originalFormat.parse(timestamp);
 
                             // Nastavení kalendáře na získané datum
-                            Calendar calendar = Calendar.getInstance();
-                            calendar.setTime(date);
-
-                            // Získání názvu měsíce
-                            SimpleDateFormat targetFormat = new SimpleDateFormat("MMMM yyyy", Locale.US);
-                            String monthName = targetFormat.format(date);
+                            SimpleDateFormat targetFormat = new SimpleDateFormat("dd.MM.yyyy");
+                            String formattedDate = targetFormat.format(date);
 
                             // Přidání názvu měsíce do datové struktury
-                            seriesData.add(new CustomWeatherDataEntry(monthName, Math.round(convertedValue))); // Přidání názvu měsíce
+                            seriesData.add(new CustomWeatherDataEntry(formattedDate, Math.round(convertedValue))); // Přidání názvu měsíce
                         }
                     }
                 }
@@ -337,5 +339,25 @@ public class History_data extends AppCompatActivity {
         CustomWeatherDataEntry(String x, Number value) {
             super(x, value);
         }
+    }
+
+    private void openDialog() {
+        Locale.setDefault(Locale.ENGLISH);
+
+        Calendar calendar = Calendar.getInstance();
+        int year = calendar.get(Calendar.YEAR);
+        int month = calendar.get(Calendar.MONTH);
+        int day = calendar.get(Calendar.DAY_OF_MONTH);
+        DatePickerDialog datePickerDialog = new DatePickerDialog(this, new DatePickerDialog.OnDateSetListener() {
+            @Override
+            public void onDateSet(DatePicker datePicker, int year, int month, int day) {
+                //Toast.makeText(Weather_layout.this, "Selected date: " + day + "." + (month + 1) + "." + year, Toast.LENGTH_SHORT).show();
+                String date = year + "-" + (month + 1) + "-" + day;
+                getDataFrom(autoCompleteTextView.getText().toString(), date);
+                System.out.println("Selected date: " + date);
+            }
+        }, year, month, day);
+
+        datePickerDialog.show();
     }
 }

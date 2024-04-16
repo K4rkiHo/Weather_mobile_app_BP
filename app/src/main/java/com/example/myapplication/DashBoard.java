@@ -147,6 +147,8 @@ public class DashBoard extends AppCompatActivity {
             // Vytvoření JSON objektu z odpovědi
             JSONObject apiResponse = new JSONObject(jsonResponse);
 
+
+
             // Načtení obsahu translate.json souboru pro názvy klíčů
             InputStream translateStream = getResources().openRawResource(R.raw.translate);
             BufferedReader reader = new BufferedReader(new InputStreamReader(translateStream));
@@ -173,6 +175,7 @@ public class DashBoard extends AppCompatActivity {
 
             // Procházení klíčů v JSON odpovědi z API
             Iterator<String> keys = apiResponse.keys();
+
             while (keys.hasNext()) {
                 String key = keys.next();
                 // Vyfiltruj klíče, které nechcete zahrnout
@@ -345,6 +348,7 @@ public class DashBoard extends AppCompatActivity {
                         sum = 0;
                         min = Double.MAX_VALUE;
                         max = 0;
+
                         for (int i = 0; i < jsonArray.length(); i++) {
                             JSONObject jsonObject = jsonArray.getJSONObject(i);
                             // Získání hodnoty z JSON objektu
@@ -373,6 +377,11 @@ public class DashBoard extends AppCompatActivity {
                         df.setDecimalSeparatorAlwaysShown(false);
                         df.setDecimalFormatSymbols(DecimalFormatSymbols.getInstance(Locale.US));
                         average = Double.parseDouble(df.format(average));
+
+                        if (jsonArray.length() <= 0) {
+                            min = 0;
+                            average = 0;
+                        }
 
                         MinMaxAngValues m = new MinMaxAngValues(key, min, max, average);
                         minMaxAngValues_arr.add(m);

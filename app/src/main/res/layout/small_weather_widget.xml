@@ -1,0 +1,64 @@
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    style="@style/Widget.MyApplication.AppWidget.Container"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:id="@+id/widget_container_main"
+    android:background="@drawable/rounded_corners"
+    android:theme="@style/Theme.MyApplication.AppWidgetContainer">
+
+    <FrameLayout
+        android:id="@+id/widget_container"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="@drawable/rounded_color_blue">
+
+        <Button
+            android:id="@+id/refreshButton_"
+            android:layout_width="30dp"
+            android:layout_height="30dp"
+            android:layout_gravity="bottom|end"
+            android:layout_marginBottom="12dp"
+            android:layout_marginEnd="12dp"
+            android:background="@drawable/refresh" />
+
+        <TextView
+            android:id="@+id/valuedateTextView"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="bottom|start"
+            android:layout_marginBottom="8dp"
+            android:layout_marginStart="8dp"
+            android:text="Value"
+            android:textColor="@color/black"
+            android:textSize="9sp" />
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:padding="16dp">
+
+            <TextView
+                android:id="@+id/keyTextView"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:onClick="onTextClick"
+                android:textColor="#616161"
+                android:text="Key"
+                android:textSize="17sp"
+                android:textStyle="bold"/>
+
+            <TextView
+                android:paddingTop="0dp"
+                android:id="@+id/valueTextView"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="8dp"
+                android:textColor="@color/black"
+                android:text="Value"
+                android:textSize="38sp" />
+
+        </LinearLayout>
+
+    </FrameLayout>
+</RelativeLayout>
