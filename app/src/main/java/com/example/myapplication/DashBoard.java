@@ -62,26 +62,20 @@ import java.util.Objects;
 public class DashBoard extends AppCompatActivity {
     private RecyclerView recyclerView;
     private List<JsonObjectModel> dataList = new ArrayList<>();
-
     private final List<MinMaxAngValues> minMaxAngValues_arr = new ArrayList<>();
     private static final String[] GROUP_KEYS = {"temp", "press", "wind", "rain", "solar", "hum"};
     private Iterator<String> keys;
-
     private UnitConverter unitConverter = new UnitConverter();
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_dash_board);
 
-
-
         Boolean basic =  SharedPreferencesManager.getBasicBackgroudFromSharedPreferences(this);
         if (basic) {
             DrawerLayout drawerLayout = findViewById(R.id.drawerLayout_);
             drawerLayout.setBackgroundColor(Color.parseColor("#FFFFFF"));
         }
-
-
 
         recyclerView = findViewById(R.id.recyclerView);
 
@@ -108,16 +102,6 @@ public class DashBoard extends AppCompatActivity {
         // Inicializace ItemTouchHelper a připojení k RecyclerView
         ItemTouchHelper itemTouchHelper = new ItemTouchHelper(simpleCallback);
         itemTouchHelper.attachToRecyclerView(recyclerView);
-
-        new Handler().postDelayed(new Runnable() {
-            @Override
-            public void run() {
-                for (MinMaxAngValues m : minMaxAngValues_arr) {
-                    Log.e("Key", m.getStringValue());
-                }
-            }
-        }, 1000);
-
     }
 
     @Override
@@ -189,9 +173,7 @@ public class DashBoard extends AppCompatActivity {
                         String savedUnit = "";
                         for (String groupKey : GROUP_KEYS) {
                             if (key.contains(groupKey)) {
-                                System.out.println("VALUE: " + groupKey);
                                 savedUnit = sharedPreferences.getString("unit___" + groupKey.toLowerCase(), "");
-                                System.out.println("Saved unit: " + savedUnit);
                                 if (key.contains("hum"))
                                 {
                                     savedUnit = "%";
@@ -228,15 +210,26 @@ public class DashBoard extends AppCompatActivity {
 
                                 dataList.add(new JsonObjectModel(i + "", czechKey + " (" + savedUnit + ")", formattedValue + " " + savedUnit, key, "min: " + decimalFormat.format(unitConverter.convertValueToSavedUnit(minMaxAngValues_arr.get(i).getMinValue(), unit, savedUnit)) + " " + savedUnit, "max: " + decimalFormat.format(unitConverter.convertValueToSavedUnit(minMaxAngValues_arr.get(i).getMaxValue(), unit, savedUnit)) + " " + savedUnit, "avg: " + decimalFormat.format(unitConverter.convertValueToSavedUnit(minMaxAngValues_arr.get(i).getAvgValue(), unit, savedUnit)) + " " + savedUnit, savedUnit, unit));
 
-                            } else {
-                                Log.e("Error", "Key not found");
                             }
                         }
                     }
                 }
             }
             //SharedPreferencesManager.saveOrderToSharedPreferences(DashBoard.this, dataList);
-            SharedPreferencesManager.loadOrderFromSharedPreferences(DashBoard.this, dataList);
+
+            boolean isCollapsed = SharedPreferencesManager.getLoadListOrderFromSp(DashBoard.this);
+
+            if (isCollapsed)
+            {
+                SharedPreferencesManager.loadOrderFromSharedPreferences(DashBoard.this, dataList);
+            }
+            else
+            {
+                SharedPreferencesManager.saveOrderToSharedPreferences(DashBoard.this, dataList);
+                SharedPreferencesManager.setLoadListOrderFromSp(DashBoard.this, true);
+            }
+
+            //SharedPreferencesManager.loadOrderFromSharedPreferences(DashBoard.this, dataList);
             // Inicializace RecyclerView
             recyclerView.setLayoutManager(new LinearLayoutManager(this));
 
@@ -294,7 +287,7 @@ public class DashBoard extends AppCompatActivity {
             public void run() {
                 // Získání uložené IP adresy z SharedPreferences
                 String ipAddress = SharedPreferencesManager.getIpAddressFromSharedPreferences(DashBoard.this);
-                String apiUrl = "http://" + ipAddress + ":5000/api/data/aggregated/today";
+                String apiUrl = "http://" + ipAddress + ":5000/api/data/meteostation/today";
 
                 // Odeslání požadavku na server
                 try {
@@ -354,8 +347,6 @@ public class DashBoard extends AppCompatActivity {
                             // Získání hodnoty z JSON objektu
                             double value = jsonObject.getDouble(key);
 
-                            //Log.d("JsonObjectModel : ", jsonObject + " ");
-
                             // Zaokrouhlení hodnoty na jedno desetinné místo
                             float roundedValue = (Math.round(value * 10.0f) / 10.0f);
                             // Přidání nového bodu do seznamu bodů pro graf
@@ -385,7 +376,6 @@ public class DashBoard extends AppCompatActivity {
 
                         MinMaxAngValues m = new MinMaxAngValues(key, min, max, average);
                         minMaxAngValues_arr.add(m);
-                        Log.d("TEST : ", m.getStringValue());
                     }
                 }
         } catch (JSONException e) {

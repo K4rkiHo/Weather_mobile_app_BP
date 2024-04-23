@@ -183,8 +183,6 @@ public class Widget_settings extends Activity {
                     translatedValue = translations.getString(key);
                     if (!key.equals("id") && !key.equals("time") && !key.equals("battery_bat") && !key.equals("battery_wh65")) {
                         keysList.add(translatedValue);
-
-                        System.out.println("Key: " + key + ", Translated value: " + translatedValue);
                     }
                 }
 

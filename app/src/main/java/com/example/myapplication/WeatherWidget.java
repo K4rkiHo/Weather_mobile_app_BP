@@ -61,39 +61,43 @@ public class WeatherWidget extends AppWidgetProvider {
 
         views.setTextViewText(R.id.valueTextView, value);
 
-        String username = SharedPreferencesManager.getUsernameFromSharedPreferences(context);
-        String password = SharedPreferencesManager.getDecodedPasswordFromSharedPreferences(context);
-        sendLoginRequest(context, username, password);
-
-
         boolean basicbackground = SharedPreferencesManager.getBasicBackgroudFromSharedPreferences(context);
-        if (basicbackground)
-        {
+        if (basicbackground) {
             views.setInt(R.id.widget_container_main, "setBackgroundResource", R.drawable.rounder_color_white_80);
-            views.setInt(R.id.widget_container,  "setBackgroundResource", R.drawable.rounded_color_white);
-            views.setInt(R.id.extraInfoLayout,  "setBackgroundResource", R.drawable.rounded_color_white);
-        }
-        else
-        {
+            views.setInt(R.id.widget_container, "setBackgroundResource", R.drawable.rounded_color_white);
+            views.setInt(R.id.extraInfoLayout, "setBackgroundResource", R.drawable.rounded_color_white);
+            views.setTextColor(R.id.valuedateTextView, context.getResources().getColor(R.color.black));
+        } else {
             views.setInt(R.id.widget_container_main, "setBackgroundResource", R.drawable.rounded_corners);
             views.setInt(R.id.widget_container, "setBackgroundResource", R.drawable.rounded_color_blue);
             views.setInt(R.id.extraInfoLayout, "setBackgroundResource", R.drawable.rounded_corner_violet);
+            views.setTextColor(R.id.valuedateTextView, context.getResources().getColor(R.color.black));
         }
 
         boolean isDarkMode = (context.getResources().getConfiguration().uiMode & Configuration.UI_MODE_NIGHT_MASK) == Configuration.UI_MODE_NIGHT_YES;
-        if (isDarkMode)
-        {
-            views.setInt(R.id.widget_container_main, "setBackgroundResource",R.drawable.rounded_corner_black);
-            views.setInt(R.id.widget_container, "setBackgroundResource", R.drawable.rounded_corner_violet);
-            views.setInt(R.id.extraInfoLayout, "setBackgroundResource",R.drawable.rounded_corner_grey);
+        if (isDarkMode) {
+            views.setInt(R.id.widget_container_main, "setBackgroundResource", R.drawable.rounded_corner_black);
+            views.setInt(R.id.widget_container, "setBackgroundResource", R.drawable.rounded_corner_grey);
+            views.setInt(R.id.extraInfoLayout, "setBackgroundResource", R.drawable.rounded_corner_grey);
             views.setTextColor(R.id.keyTextView, context.getResources().getColor(R.color.white));
             views.setTextColor(R.id.valueTextView, context.getResources().getColor(R.color.white));
+            views.setTextColor(R.id.valuedateTextView, context.getResources().getColor(R.color.white));
 
         }
         else
         {
             views.setTextColor(R.id.keyTextView, context.getResources().getColor(R.color.black));
             views.setTextColor(R.id.valueTextView, context.getResources().getColor(R.color.black));
+        }
+
+        if (isDarkMode && !basicbackground)
+        {
+            views.setInt(R.id.widget_container_main, "setBackgroundResource", R.drawable.rounded_corner_black);
+            views.setInt(R.id.widget_container, "setBackgroundResource", R.drawable.rounded_corner_violet);
+            views.setInt(R.id.extraInfoLayout, "setBackgroundResource", R.drawable.rounded_corner_grey);
+            views.setTextColor(R.id.keyTextView, context.getResources().getColor(R.color.white));
+            views.setTextColor(R.id.valueTextView, context.getResources().getColor(R.color.white));
+            views.setTextColor(R.id.valuedateTextView, context.getResources().getColor(R.color.white));
         }
 
 
@@ -108,10 +112,6 @@ public class WeatherWidget extends AppWidgetProvider {
         views.setOnClickPendingIntent(R.id.refreshButton, updatePendingIntent);
 
          */
-
-        System.out.println("updateAppWidget : " + savedUnit);
-
-
 
         String translatedValue = "";
         String savedUnit_original = "";
@@ -161,17 +161,13 @@ public class WeatherWidget extends AppWidgetProvider {
 
         views.setTextViewText(R.id.keyTextView, translatedValue);
 
-        System.out.println("updateAppWidget 2: " + savedUnit);
-
         selectedKey_ = selectedKey;
 
         SharedPreferences sharedPreferences = context.getSharedPreferences("unit_settings", Context.MODE_PRIVATE);
         //String savedUnit = "";
         for (String groupKey : GROUP_KEYS) {
             if (selectedKey_.contains(groupKey)) {
-                //System.out.println("VALUE: " + groupKey);
                 savedUnit = sharedPreferences.getString("unit___" + groupKey.toLowerCase(), "");
-                //System.out.println("Saved unit: " + savedUnit);
                 if (selectedKey.contains("hum"))
                 {
                     savedUnit = "%";
@@ -200,24 +196,33 @@ public class WeatherWidget extends AppWidgetProvider {
         PendingIntent pendingIntent = PendingIntent.getActivity(context, appWidgetId, intent, PendingIntent.FLAG_UPDATE_CURRENT);
         views.setOnClickPendingIntent(R.id.keyTextView, pendingIntent);
 
-        views.setTextViewText(R.id.valueTextView, Math.round(unitConverter.convertValueToSavedUnit(Double.parseDouble(value), savedUnit_original, savedUnit)) + " " + savedUnit);
 
-        System.out.println("Min: " + min);
-        System.out.println("Max: " + max);
-        System.out.println("Avg: " + avg);
+        PendingIntent pendingIntentvalue = PendingIntent.getActivity(context, appWidgetId, intent, PendingIntent.FLAG_UPDATE_CURRENT);
+        views.setOnClickPendingIntent(R.id.valueTextView, pendingIntentvalue);
+
+        double convertedValue = unitConverter.convertValueToSavedUnit(Double.parseDouble(value), savedUnit_original, savedUnit);
+        double roundedValue = Math.round(convertedValue * 10.0) / 10.0;
 
 
-        views.setTextViewText(R.id.minTextView, "min: " + Math.round(unitConverter.convertValueToSavedUnit(min, savedUnit_original, savedUnit)) + " " + savedUnit);
-        views.setTextViewText(R.id.maxTextView, "max: " + Math.round(unitConverter.convertValueToSavedUnit(max, savedUnit_original, savedUnit)) + " " + savedUnit);
-        views.setTextViewText(R.id.avgTextView, "avg: " + Math.round(unitConverter.convertValueToSavedUnit(avg, savedUnit_original, savedUnit)) + " " + savedUnit);
+        views.setTextViewText(R.id.valueTextView, roundedValue + " " + savedUnit);
+
+        double convertedValueavg = unitConverter.convertValueToSavedUnit(avg, savedUnit_original, savedUnit);
+        double roundedValueavg = Math.round(convertedValueavg * 10.0) / 10.0;
+
+        double convertedValueMin = unitConverter.convertValueToSavedUnit(min, savedUnit_original, savedUnit);
+        double convertedValueMax = unitConverter.convertValueToSavedUnit(max, savedUnit_original, savedUnit);
+
+        double roundedValuemin = Math.round(convertedValueMin * 10.0) / 10.0;
+        double roundedValuemax = Math.round(convertedValueMax * 10.0) / 10.0;
+
+
+
+        views.setTextViewText(R.id.minTextView, "min: " + roundedValuemin + " " + savedUnit);
+        views.setTextViewText(R.id.maxTextView, "max: " + roundedValuemax + " " + savedUnit);
+        views.setTextViewText(R.id.avgTextView, "avg: " + roundedValueavg + " " + savedUnit);
 
         views.setTextViewText(R.id.valuedateTextView, convertToClassicTime(date));
 
-        System.out.println("weather" + translatedValue);
-        System.out.println("jsonObject" + selectedKey);
-        System.out.println("unit" + savedUnit);//
-        System.out.println("convert_unit" + savedUnit);//
-        System.out.println("original_unit" + savedUnit_original);
         // Instruct the widget manager to update the widget
         appWidgetManager.updateAppWidget(appWidgetId, views);
     }
@@ -247,15 +252,6 @@ public class WeatherWidget extends AppWidgetProvider {
         intent.putExtra("unit", savedUnit);
         intent.putExtra("convert_unit", savedUnit);
         intent.putExtra("original_unit", savedUnit);
-
-        System.out.println("weather _ " + selectedKey_);
-        System.out.println("jsonObject _ " + selectedKey_);
-        System.out.println("unit _ " + savedUnit);
-        System.out.println("convert_unit _ " + savedUnit);
-        System.out.println("original_unit _ " + savedUnit);
-
-        System.out.println("onTextClick : " + savedUnit);
-
 
         intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
         context.startActivity(intent);
@@ -290,9 +286,6 @@ public class WeatherWidget extends AppWidgetProvider {
                     PendingIntent updatePendingIntent = PendingIntent.getBroadcast(context, appWidgetId, updateIntent, PendingIntent.FLAG_UPDATE_CURRENT);
                     views.setOnClickPendingIntent(R.id.refreshButton, updatePendingIntent);
 
-
-                    System.out.println("onUpdate : " + savedUnit);
-
                     // Aktualizace layoutu widgetu
                     //appWidgetManager.updateAppWidget(appWidgetId, views);
 
@@ -325,8 +318,8 @@ public class WeatherWidget extends AppWidgetProvider {
         views.setInt(R.id.extraInfoLayout, "setBackgroundResource",R.drawable.rounded_corner_grey);
         views.setTextColor(R.id.keyTextView, context.getResources().getColor(R.color.white));
         views.setTextColor(R.id.valueTextView, context.getResources().getColor(R.color.white));
-        views.setTextViewText(R.id.valueTextView, "No internet connection");
-        views.setTextViewText(R.id.keyTextView, "Error");
+        views.setTextViewText(R.id.valueTextView, "No data available");
+        views.setTextViewText(R.id.keyTextView, "Connection lost");
         views.setTextViewText(R.id.minTextView, "");
         views.setTextViewText(R.id.maxTextView, "");
         views.setTextViewText(R.id.avgTextView, "");
@@ -572,7 +565,6 @@ public class WeatherWidget extends AppWidgetProvider {
                     // Zpracování odpovědi
                     int responseCode = connection.getResponseCode();
                     if (responseCode == HttpURLConnection.HTTP_OK) {
-                        //System.out.println("Login successful!");
                         // Pokud je odpověď 200, zpracujeme access_token a uložíme ho do SharedPreferences
                         InputStream inputStream = connection.getInputStream();
                         BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream));

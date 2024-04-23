@@ -69,40 +69,26 @@ import java.util.Locale;
 import java.util.TimeZone;
 
 public class Weather_layout extends AppCompatActivity {
-
     private TextView textView_test;
-
     private String jsonString;
     private String unit;
     private String weather;
     private String convert_unit;
-
     private String original_unit;
     private LineChart lineChart;
-
     private TextView textViewAverage;
     private TextView textViewMin;
     private TextView textViewMax;
-
     private TextView textViewDate;
     private Button button;
-
     private Button calendar;
-
     private boolean dataForTodayCalled = false;
-
     Scatter scatter;
-
-
     List<DataEntry> seriesData = new ArrayList<>();
-
     Cartesian cartesian;
     AnyChartView anyChartView;
-
     private UnitConverter unitConverter = new UnitConverter();
-
     private boolean scatter_input = false;
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -127,16 +113,6 @@ public class Weather_layout extends AppCompatActivity {
         convert_unit = intent.getStringExtra("convert_unit");
         original_unit = intent.getStringExtra("original_unit");
 
-        System.out.println("JsonObject: " + jsonString);
-        System.out.println("unit: " + unit);
-        System.out.println("weather: " + weather);
-        System.out.println("convert_unit: " + convert_unit);
-        System.out.println("original_unit: " + original_unit);
-
-        //String[] parts = unit.split(" ");
-        //parts[1]
-        String unit_ = unit;
-
         anyChartView = findViewById(R.id.any_chart_view);
         anyChartView.setProgressBar(findViewById(R.id.progress_bar));
 
@@ -152,7 +128,6 @@ public class Weather_layout extends AppCompatActivity {
             scatter.xScale()
                     .minimum(1.5d)
                     .maximum(5.5d);
-//        scatter.xScale().tick
             scatter.yScale()
                     .minimum(40d)
                     .maximum(100d);
@@ -170,14 +145,13 @@ public class Weather_layout extends AppCompatActivity {
             scatter.tooltip().displayMode(TooltipDisplayMode.UNION);
         }
 
-
-
-
         int nightModeFlags = getResources().getConfiguration().uiMode & Configuration.UI_MODE_NIGHT_MASK;
 
         // Porovnání s konstantou pro zapnutí temného režimu
         if (nightModeFlags == Configuration.UI_MODE_NIGHT_YES) {
 
+            textView_test.setTextColor(Color.parseColor("#FFFFFF"));
+            textViewDate.setTextColor(Color.parseColor("#FFFFFF"));
             cartesian = AnyChart.line();
             cartesian.background().fill("#3b3b3b");
             cartesian.xAxis(0).labels().fontColor("#000000");
@@ -210,9 +184,6 @@ public class Weather_layout extends AppCompatActivity {
         cartesian.yAxis(0).title( convert_unit );
         cartesian.xAxis(0).labels().padding(5d, 5d, 5d, 5d);
 
-
-
-
         button = findViewById(R.id.button);
         button.setOnClickListener(v -> {
             Intent intent_ = new Intent(Weather_layout.this, History_data.class);
@@ -224,8 +195,6 @@ public class Weather_layout extends AppCompatActivity {
             startActivity(intent_);
         });
 
-
-
         textView_test.setText(weather);
         getDataForToday();
 
@@ -236,12 +205,11 @@ public class Weather_layout extends AppCompatActivity {
             anyChartView.setChart(cartesian);
         });
 
-        Boolean basic =  SharedPreferencesManager.getBasicBackgroudFromSharedPreferences(this);
+        Boolean basic = SharedPreferencesManager.getBasicBackgroudFromSharedPreferences(this);
         if (basic) {
             ConstraintLayout constraintLayout = findViewById(R.id.constantLayout);
             constraintLayout.setBackgroundColor(Color.parseColor("#FFFFFF"));
         }
-
 
     }
 
@@ -326,38 +294,6 @@ public class Weather_layout extends AppCompatActivity {
                         // Zde můžete zobrazit uživateli upozornění, že data nebyla možné načíst
                         Toast.makeText(Weather_layout.this, "Error loading data for today", Toast.LENGTH_SHORT).show();
 
-                        /*
-                        for (int i = 0; i < 24; i++) {
-                            seriesData.add(new CustomWeatherDataEntry(String.valueOf(i) + "h", 0));
-                        }
-                        Set set = Set.instantiate();
-                        set.data(seriesData);
-                        Mapping series1Mapping = set.mapAs("{ x: 'x', value: 'value' }");
-                        Line series1 = cartesian.line(series1Mapping);
-                        series1.name(weather);
-                        series1.hovered().markers().enabled(true);
-                        series1.hovered().markers()
-                                .type(MarkerType.CIRCLE)
-                                .size(4d);
-                        series1.tooltip()
-                                .position("right")
-                                .anchor(Anchor.LEFT_CENTER)
-                                .offsetX(5d)
-                                .offsetY(5d);
-
-                        series1.color("#808080");
-
-                        //cartesian.legend().enabled(true);
-                        cartesian.legend().fontSize(18d);
-                        cartesian.legend().padding(0d, 0d, 10d, 0d);
-
-
-                        cartesian.xScroller(true);
-
-                        anyChartView.setChart(cartesian);
-
-                         */
-
                         textViewAverage.setText("Avg: ");
                         textViewMin.setText("Min: ");
                         textViewMax.setText("Max: ");
@@ -376,35 +312,19 @@ public class Weather_layout extends AppCompatActivity {
             for (int i = 0; i < jsonArray.length(); i++) {
                 JSONObject jsonObject = jsonArray.getJSONObject(i);
 
-                System.out.println("JSON OBJECT: " + jsonObject.toString());
-
                 // Získání hodnoty z JSON objektu
                 double value = jsonObject.getDouble(jsonString);
                 date = jsonObject.getString("time");
 
                 double convertedValue = unitConverter.convertValueToSavedUnit(value, original_unit, convert_unit);
 
-                //DecimalFormat decimalFormat = new DecimalFormat("#.##");
                 double roundedValue = Math.round(convertedValue * 10.0) / 10.0;
-                //String formattedValue = decimalFormat.format(roundedValue);
 
                 int hour = getHourFromTimeString(date);
 
                 String date_cl = convertToClassicTime(date);
 
                 seriesData.add(new CustomWeatherDataEntry(date_cl, roundedValue));
-                //System.out.println("HOUR: " + hour);
-                /*
-                if (i == hour) {
-                    //System.out.println("HOUR2: " + hour);
-                    seriesData.add(new CustomWeatherDataEntry(String.valueOf(i) + "h", Math.round(convertedValue)));
-                } else {
-                    seriesData.add(new CustomWeatherDataEntry(String.valueOf(i) + "h", 0));
-                }
-
-                 */
-
-                //seriesData.add(new CustomWeatherDataEntry(String.valueOf(i) + "h", Math.round(convertedValue)));
 
                 // Aktualizace sumy pro výpočet průměru
                 sum += value;
@@ -543,8 +463,9 @@ public class Weather_layout extends AppCompatActivity {
     }
     private void processJsonResponseByDate(String jsonResponse) {
         try {
-            //cartesian.removeAllSeries();
-            cartesian.removeAllSeries();
+            if (cartesian != null) {
+                cartesian.removeAllSeries();
+            }
             anyChartView.setVisibility(View.VISIBLE);
             JSONArray jsonArray = new JSONArray(jsonResponse);
             List<DataEntry> seriesData = new ArrayList<>();
@@ -577,8 +498,6 @@ public class Weather_layout extends AppCompatActivity {
             for (int i = 0; i < jsonArray.length(); i++) {
                 JSONObject jsonObject = jsonArray.getJSONObject(i);
 
-                //System.out.println("JSON OBJECT: " + jsonObject.toString());
-
                 // Získání hodnoty z JSON objektu
                 double value = jsonObject.getDouble(jsonString);
 
@@ -592,15 +511,6 @@ public class Weather_layout extends AppCompatActivity {
 
                 seriesData.add(new CustomWeatherDataEntry(date_cl, roundedValue));
 
-                /*
-                if (!hours.contains(hour)) {
-                    hours.add(hour);
-                    System.out.println("Added to hours!");
-                    seriesData.add(new CustomWeatherDataEntry(String.valueOf(hour) + "h", Math.round(convertedValue)));
-                }
-
-                 */
-
                 // Aktualizace sumy pro výpočet průměru
                 sum += value;
 
@@ -612,16 +522,6 @@ public class Weather_layout extends AppCompatActivity {
                     max = value;
                 }
             }
-
-            /*
-            // Doplnění nulových hodnot pro chybějící hodiny
-            for (int hour = 0; hour <= 23; hour++) {
-                if (!hours.contains(hour)) {
-                    seriesData.add(new CustomWeatherDataEntry(String.valueOf(hour) + "h", 0));
-                }
-            }
-
-             */
 
             double average = sum / jsonArray.length();
 
@@ -641,10 +541,6 @@ public class Weather_layout extends AppCompatActivity {
 
             textViewMax.setText("Max: " + roundedValuemax + " " + convert_unit);
 
-            for (int x : hours)
-            {
-                System.out.println("HOURS: " + x);
-            }
 
             //new data graph
             Set set = Set.instantiate();
@@ -662,17 +558,10 @@ public class Weather_layout extends AppCompatActivity {
                     .offsetX(5d)
                     .offsetY(5d);
 
-            //cartesian.legend().enabled(true);
             cartesian.legend().fontSize(18d);
             cartesian.legend().padding(0d, 0d, 10d, 0d);
-
             cartesian.xScroller(true);
-
             hours.clear();
-
-            //anyChartView.setChart(cartesian);
-
-
 
         } catch (JSONException e) {
             e.printStackTrace();
@@ -707,7 +596,6 @@ public class Weather_layout extends AppCompatActivity {
                 String date = year + "-" + (month + 1) + "-" + day;
                 getDataBydate(date);
                 textViewDate.setText("Date: " + date);
-                System.out.println("Selected date: " + date);
             }
         }, year, month, day);
 

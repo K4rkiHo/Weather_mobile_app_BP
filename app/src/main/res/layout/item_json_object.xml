@@ -50,18 +50,6 @@
                 android:textColor="#0000FF"
                 android:textSize="16dp" />
 
-            <TextView
-                android:textStyle="bold"
-                android:gravity="center"
-                android:id="@+id/maxTextView"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:ellipsize="end"
-                android:maxLines="1"
-                android:text="Max"
-                android:textColor="#FF0000"
-                android:textSize="16dp" />
 
             <TextView
                 android:textStyle="bold"
@@ -74,6 +62,19 @@
                 android:maxLines="1"
                 android:text="Avg"
                 android:textColor="#006400"
+                android:textSize="16dp" />
+
+            <TextView
+                android:textStyle="bold"
+                android:gravity="center"
+                android:id="@+id/maxTextView"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:ellipsize="end"
+                android:maxLines="1"
+                android:text="Max"
+                android:textColor="#FF0000"
                 android:textSize="16dp" />
 
         </LinearLayout>

@@ -94,8 +94,6 @@ public class Units_settings extends AppCompatActivity {
         SharedPreferences.Editor editor = sharedPreferences.edit();
         editor.putString("unit__" + groupKey.toLowerCase(), selectedUnit);
         editor.apply();
-
-        System.out.println("Selected " + groupKey + " unit: " + selectedUnit);
     }
 
     // Získá klíč skupiny podle ID radio tlačítka
@@ -111,8 +109,6 @@ public class Units_settings extends AppCompatActivity {
             RadioButton radioButton = findViewById(checkedId);
             String selectedUnit = sharedPreferences.getString("unit__" + groupKey.toLowerCase(), "");
             String selectedButton = radioButton.getText().toString();
-            System.out.println("Selected " + groupKey + " button: " + selectedButton);
-            System.out.println("Selected " + groupKey + " unit: " + selectedUnit);
         }
     }
 }

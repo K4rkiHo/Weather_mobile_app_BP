@@ -16,7 +16,8 @@ public class SharedPreferencesManager {
     private static final String BASIC_BACKGROUD = "basic_background";
     private static final String KEY_ENCODED_PASSWORD = "encoded_password";
     private static final String STATION_ID = "station_id";
-    private static final String LIST_ORDER = "list_order_test";
+    private static final String LIST_ORDER = "list_order";
+    private static final String LOAD_LIST_ORDER_FROM_SP = "load_list_order_from_sp";
 
     // Uložení IP adresy do SharedPreferences
     public static void saveIpAddressToSharedPreferences(Context context, String ipAddress) {
@@ -114,8 +115,6 @@ public class SharedPreferencesManager {
         for (JsonObjectModel item : dataList) {
             orderBuilder.append(item.getId()).append(",");
         }
-
-        System.out.println("orderBuilder: " + orderBuilder.toString());
         editor.putString(LIST_ORDER, orderBuilder.toString());
         editor.apply();
     }
@@ -138,4 +137,19 @@ public class SharedPreferencesManager {
         dataList.clear();
         dataList.addAll(orderedList);
     }
+
+    public static void setLoadListOrderFromSp(Context context, boolean loadListOrderFromSp) {
+        SharedPreferences sharedPreferences = context.getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE);
+        SharedPreferences.Editor editor = sharedPreferences.edit();
+        editor.putBoolean(LOAD_LIST_ORDER_FROM_SP, loadListOrderFromSp);
+        editor.apply();
+    }
+
+    public static boolean getLoadListOrderFromSp(Context context) {
+        SharedPreferences sharedPreferences = context.getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE);
+        return sharedPreferences.getBoolean(LOAD_LIST_ORDER_FROM_SP, false);
+    }
+
+
+
 }

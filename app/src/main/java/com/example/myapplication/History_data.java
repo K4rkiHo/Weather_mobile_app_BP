@@ -5,6 +5,7 @@ import androidx.constraintlayout.widget.ConstraintLayout;
 
 import android.app.DatePickerDialog;
 import android.content.Intent;
+import android.content.res.Configuration;
 import android.graphics.Color;
 import android.os.Bundle;
 import android.view.View;
@@ -52,7 +53,7 @@ import java.util.Locale;
 
 public class History_data extends AppCompatActivity {
     private LineChart lineChart;
-    String[] historyData = {"daily", "weekly", "monthly"};
+    String[] historyData = {"weekly", "monthly", "yearly"};
     AutoCompleteTextView autoCompleteTextView;
     ArrayAdapter<String> adapter;
     private String jsonString;
@@ -112,7 +113,36 @@ public class History_data extends AppCompatActivity {
         anyChartView = findViewById(R.id.any_chart_view);
         anyChartView.setProgressBar(findViewById(R.id.progress_bar));
 
-        cartesian = AnyChart.line();
+        int nightModeFlags = getResources().getConfiguration().uiMode & Configuration.UI_MODE_NIGHT_MASK;
+
+        boolean basicBackground = SharedPreferencesManager.getBasicBackgroudFromSharedPreferences(this);
+
+        // Porovnání s konstantou pro zapnutí temného režimu
+        if (nightModeFlags == Configuration.UI_MODE_NIGHT_YES) {
+            if (basicBackground)
+            {
+                textView.setTextColor(Color.parseColor("#000000"));
+            }
+            else
+            {
+                textView.setTextColor(Color.parseColor("#FFFFFF"));
+            }
+            cartesian = AnyChart.line();
+            cartesian.background().fill("#3b3b3b");
+            cartesian.xAxis(0).labels().fontColor("#000000");
+            cartesian.yAxis(0).labels().fontColor("#000000");
+            cartesian.xAxis(0).stroke("#000000");
+            cartesian.yAxis(0).stroke("#000000");
+            cartesian.xAxis(0).ticks().stroke("#000000");
+            cartesian.yAxis(0).ticks().stroke("#000000");
+
+            cartesian.legend().fontColor("#FF000000");
+
+        } else {
+            cartesian = AnyChart.line();
+
+        }
+
 
         cartesian.animation(true);
 
@@ -137,20 +167,25 @@ public class History_data extends AppCompatActivity {
                 //seriesData.clear();
 
                 selected_item = selected;
+                openDialog();
+
                 //getDataFrom(selected);
-                //anyChartView.setChart(cartesian);
+                anyChartView.setChart(cartesian);
 
 
                 //Toast.makeText(History_data.this, selected, Toast.LENGTH_SHORT).show();
             }
         });
 
+        /*
         calendar = findViewById(R.id.button_calendar);
         calendar.setOnClickListener(v -> {
             //cartesian.removeAllSeries();
             openDialog();
             anyChartView.setChart(cartesian);
         });
+
+         */
 
     }
 
@@ -160,17 +195,17 @@ public class History_data extends AppCompatActivity {
             @Override
             public void run() {
                 String endpoint = "";
-                if (selected_item == "daily")
+                if (selected_item == "yearly")
                 {
-                    endpoint = "daily_test";
+                    endpoint = "daily/yearly";
                 }
                 else if (selected_item == "weekly")
                 {
-                    endpoint = "weekly_test";
+                    endpoint = "hourly/weekly";
                 }
                 else if (selected_item == "monthly")
                 {
-                    endpoint = "monthly_test";
+                    endpoint = "4hourly/monthly";
                 }
                 // Získání uložené IP adresy z SharedPreferences
                 String ipAddress = SharedPreferencesManager.getIpAddressFromSharedPreferences(History_data.this);
@@ -233,8 +268,8 @@ public class History_data extends AppCompatActivity {
                 double value = jsonObject.getDouble(jsonString);
 
                 // Zaokrouhlení hodnoty na jedno desetinné místo
-                float roundedValue = (Math.round(value * 10.0f) / 10.0f);
                 double convertedValue = unitConverter.convertValueToSavedUnit(value, original_unit, convert_unit);
+                double roundedValue = Math.round(convertedValue * 10.0) / 10.0;
 
                 //seriesData.add(new CustomWeatherDataEntry(String.valueOf(i) + "h", Math.round(convertedValue)));
 
@@ -242,7 +277,7 @@ public class History_data extends AppCompatActivity {
                 {
                     if (item.equals(item_selected))
                     {
-                        if (item == "daily")
+                        if (item == "yearly")
                         {
                             String timestamp = jsonObject.getString("week_start");
                             SimpleDateFormat originalFormat = new SimpleDateFormat("EEE, dd MMM yyyy HH:mm:ss z", Locale.US); // Přidání Locale.US, pokud používáte anglický formát
@@ -250,35 +285,35 @@ public class History_data extends AppCompatActivity {
 
                             SimpleDateFormat targetFormat = new SimpleDateFormat("dd.MM.yyyy");
                             String formattedDate = targetFormat.format(date);
-                            seriesData.add(new CustomWeatherDataEntry(formattedDate, Math.round(convertedValue)));
+                            seriesData.add(new CustomWeatherDataEntry(formattedDate, roundedValue));
 
                             //labels.add(timestamp);
                         }
                         else if (item == "weekly")
                         {
-                            String timestamp = jsonObject.getString("week_start");
+                            String timestamp = jsonObject.getString("time");
                             SimpleDateFormat originalFormat = new SimpleDateFormat("EEE, dd MMM yyyy HH:mm:ss z", Locale.US);
                             Date date = originalFormat.parse(timestamp);
 
-                            SimpleDateFormat targetFormat = new SimpleDateFormat("dd.MM.yyyy");
+                            SimpleDateFormat targetFormat = new SimpleDateFormat("dd.MM.yyyy HH:mm:ss");
                             String formattedDate = targetFormat.format(date);
 
                             // Přidání do datové struktury
-                            seriesData.add(new CustomWeatherDataEntry(formattedDate, Math.round(convertedValue)));
+                            seriesData.add(new CustomWeatherDataEntry(formattedDate, roundedValue));
                         }
                         else if (item == "monthly")
                         {
                             // Získání hodnoty začátku následujícího měsíce ze získaných dat z API
-                            String timestamp = jsonObject.getString("week_start");
+                            String timestamp = jsonObject.getString("time");
                             SimpleDateFormat originalFormat = new SimpleDateFormat("EEE, dd MMM yyyy HH:mm:ss z", Locale.US);
                             Date date = originalFormat.parse(timestamp);
 
                             // Nastavení kalendáře na získané datum
-                            SimpleDateFormat targetFormat = new SimpleDateFormat("dd.MM.yyyy");
+                            SimpleDateFormat targetFormat = new SimpleDateFormat("dd.MM.yyyy HH:mm:ss");
                             String formattedDate = targetFormat.format(date);
 
                             // Přidání názvu měsíce do datové struktury
-                            seriesData.add(new CustomWeatherDataEntry(formattedDate, Math.round(convertedValue))); // Přidání názvu měsíce
+                            seriesData.add(new CustomWeatherDataEntry(formattedDate, roundedValue)); // Přidání názvu měsíce
                         }
                     }
                 }
@@ -300,9 +335,18 @@ public class History_data extends AppCompatActivity {
             }
             double average = sum / jsonArray.length();
 
-            textViewAverage.setText("Avg: " + Math.round(unitConverter.convertValueToSavedUnit(average, original_unit, convert_unit)) + " " + convert_unit);
-            textViewMin.setText("Min: " + Math.round(unitConverter.convertValueToSavedUnit(min, original_unit, convert_unit)) + " " + convert_unit);
-            textViewMax.setText("Max: " + Math.round(unitConverter.convertValueToSavedUnit(max, original_unit, convert_unit)) + " " + convert_unit);
+            double convertedValueavg = unitConverter.convertValueToSavedUnit(average, original_unit, convert_unit);
+            double roundedValueavg = Math.round(convertedValueavg * 10.0) / 10.0;
+
+            double convertedValueMin = unitConverter.convertValueToSavedUnit(min, original_unit, convert_unit);
+            double convertedValueMax = unitConverter.convertValueToSavedUnit(max, original_unit, convert_unit);
+
+            double roundedValuemin = Math.round(convertedValueMin * 10.0) / 10.0;
+            double roundedValuemax = Math.round(convertedValueMax * 10.0) / 10.0;
+
+            textViewAverage.setText("Avg: " + roundedValueavg + " " + convert_unit);
+            textViewMin.setText("Min: " + roundedValuemin + " " + convert_unit);
+            textViewMax.setText("Max: " + roundedValuemax + " " + convert_unit);
 
             Set set = Set.instantiate();
             set.data(seriesData);
@@ -354,7 +398,6 @@ public class History_data extends AppCompatActivity {
                 //Toast.makeText(Weather_layout.this, "Selected date: " + day + "." + (month + 1) + "." + year, Toast.LENGTH_SHORT).show();
                 String date = year + "-" + (month + 1) + "-" + day;
                 getDataFrom(autoCompleteTextView.getText().toString(), date);
-                System.out.println("Selected date: " + date);
             }
         }, year, month, day);
 

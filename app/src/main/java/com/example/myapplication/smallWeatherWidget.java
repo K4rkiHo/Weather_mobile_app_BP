@@ -7,6 +7,8 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.res.Configuration;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
 import android.os.Handler;
 import android.os.Looper;
 import android.view.View;
@@ -44,21 +46,18 @@ public class smallWeatherWidget extends AppWidgetProvider {
         // Construct the RemoteViews object
         RemoteViews views = new RemoteViews(context.getPackageName(), R.layout.small_weather_widget);
 
-        String username = SharedPreferencesManager.getUsernameFromSharedPreferences(context);
-        String password = SharedPreferencesManager.getDecodedPasswordFromSharedPreferences(context);
-        sendLoginRequest(context, username, password);
-
-
         boolean basicbackground = SharedPreferencesManager.getBasicBackgroudFromSharedPreferences(context);
         if (basicbackground)
         {
             views.setInt(R.id.widget_container_main, "setBackgroundResource", R.drawable.rounder_color_white_80);
             views.setInt(R.id.widget_container,  "setBackgroundResource", R.drawable.rounded_color_white);
+            views.setTextColor(R.id.valuedateTextView, context.getResources().getColor(R.color.black));
         }
         else
         {
             views.setInt(R.id.widget_container_main, "setBackgroundResource", R.drawable.rounded_corners);
             views.setInt(R.id.widget_container, "setBackgroundResource", R.drawable.rounded_color_blue);
+            views.setTextColor(R.id.valuedateTextView, context.getResources().getColor(R.color.black));
         }
 
         boolean isDarkMode = (context.getResources().getConfiguration().uiMode & Configuration.UI_MODE_NIGHT_MASK) == Configuration.UI_MODE_NIGHT_YES;
@@ -68,6 +67,7 @@ public class smallWeatherWidget extends AppWidgetProvider {
             views.setInt(R.id.widget_container, "setBackgroundResource", R.drawable.rounded_corner_grey);
             views.setTextColor(R.id.keyTextView, context.getResources().getColor(R.color.white));
             views.setTextColor(R.id.valueTextView, context.getResources().getColor(R.color.white));
+            views.setTextColor(R.id.valuedateTextView, context.getResources().getColor(R.color.white));
 
         }
         else
@@ -130,9 +130,7 @@ public class smallWeatherWidget extends AppWidgetProvider {
         //String savedUnit = "";
         for (String groupKey : GROUP_KEYS) {
             if (selectedKey_.contains(groupKey)) {
-                //System.out.println("VALUE: " + groupKey);
                 savedUnit = sharedPreferences.getString("unit___" + groupKey.toLowerCase(), "");
-                //System.out.println("Saved unit: " + savedUnit);
                 if (selectedKey.contains("hum"))
                 {
                     savedUnit = "%";
@@ -159,29 +157,74 @@ public class smallWeatherWidget extends AppWidgetProvider {
         PendingIntent pendingIntent = PendingIntent.getActivity(context, appWidgetId, intent, PendingIntent.FLAG_UPDATE_CURRENT);
         views.setOnClickPendingIntent(R.id.keyTextView, pendingIntent);
 
-        views.setTextViewText(R.id.valueTextView, Math.round(unitConverter.convertValueToSavedUnit(Double.parseDouble(value), savedUnit_original, savedUnit)) + " " + savedUnit);
+        double convertedValue = unitConverter.convertValueToSavedUnit(Double.parseDouble(value), savedUnit_original, savedUnit);
+        double roundedValue = Math.round(convertedValue * 10.0) / 10.0;
+
+        views.setTextViewText(R.id.valueTextView, roundedValue + " " + savedUnit);
         views.setTextViewText(R.id.valuedateTextView, convertToClassicTime(date));
+
+        PendingIntent pendingIntentvalue = PendingIntent.getActivity(context, appWidgetId, intent, PendingIntent.FLAG_UPDATE_CURRENT);
+        views.setOnClickPendingIntent(R.id.valueTextView, pendingIntentvalue);
+
         // Instruct the widget manager to update the widget
         appWidgetManager.updateAppWidget(appWidgetId, views);
     }
 
 
-    public void onUpdate_small(Context context, AppWidgetManager appWidgetManager, int[] appWidgetIds) {
+    @Override
+    public void onUpdate(Context context, AppWidgetManager appWidgetManager, int[] appWidgetIds) {
         // There may be multiple widgets active, so update all of them
         for (int appWidgetId : appWidgetIds) {
-            String selectedKey = smallWeatherWidgetConfigureActivity.loadSelectedKeyPref(context, appWidgetId);
-            RemoteViews views = new RemoteViews(context.getPackageName(), R.layout.small_weather_widget);
-            Intent updateIntent = new Intent(context, WeatherWidget.class);
-            updateIntent.setAction("com.example.myapplication.UPDATE_WIDGET");
-            updateIntent.putExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, appWidgetId);
-            updateIntent.putExtra("SELECTED_KEY_small", selectedKey);
-            updateIntent.putExtra("unit", savedUnit);
+            boolean isConnected = isConnectedToInternet(context);
+            if (!isConnected) {
+                updateWidgetColorForNoInternet(context, appWidgetId);
+                return;
+            }
+            else {
 
-            PendingIntent updatePendingIntent = PendingIntent.getBroadcast(context, appWidgetId, updateIntent, PendingIntent.FLAG_UPDATE_CURRENT);
-            views.setOnClickPendingIntent(R.id.refreshButton_, updatePendingIntent);
-            getDataFromApiByKey(context, selectedKey, appWidgetManager, appWidgetId);
-            appWidgetManager.updateAppWidget(appWidgetId, views);
+                String username = SharedPreferencesManager.getUsernameFromSharedPreferences(context);
+                String password = SharedPreferencesManager.getDecodedPasswordFromSharedPreferences(context);
+                sendLoginRequest(context, username, password);
+
+                String selectedKey = smallWeatherWidgetConfigureActivity.loadSelectedKeyPref(context, appWidgetId);
+                RemoteViews views = new RemoteViews(context.getPackageName(), R.layout.small_weather_widget);
+                Intent updateIntent = new Intent(context, smallWeatherWidget.class);
+                updateIntent.setAction("com.example.myapplication.UPDATE_WIDGET");
+                updateIntent.putExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, appWidgetId);
+                updateIntent.putExtra("SELECTED_KEY_small", selectedKey);
+                updateIntent.putExtra("unit", savedUnit);
+
+                PendingIntent updatePendingIntent = PendingIntent.getBroadcast(context, appWidgetId, updateIntent, PendingIntent.FLAG_UPDATE_CURRENT);
+                views.setOnClickPendingIntent(R.id.refreshButton_, updatePendingIntent);
+                getDataFromApiByKey(context, selectedKey, appWidgetManager, appWidgetId);
+                appWidgetManager.updateAppWidget(appWidgetId, views);
+            }
         }
+    }
+
+    private boolean isConnectedToInternet(Context context) {
+        ConnectivityManager connectivityManager = (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
+        NetworkInfo networkInfo = connectivityManager.getActiveNetworkInfo();
+        return networkInfo != null && networkInfo.isConnected();
+    }
+
+    // Funkce pro aktualizaci barvy widgetu, pokud není připojení k internetu
+    private void updateWidgetColorForNoInternet(Context context, int appWidgetId) {
+        // Získání RemoteViews pro widget
+        RemoteViews views = new RemoteViews(context.getPackageName(), R.layout.small_weather_widget);
+
+        // Změna barvy pozadí na červenou
+        views.setInt(R.id.widget_container_main, "setBackgroundResource",R.drawable.rounded_corner_black);
+        views.setInt(R.id.widget_container, "setBackgroundResource", R.drawable.rounded_corner_grey);
+        views.setInt(R.id.extraInfoLayout, "setBackgroundResource",R.drawable.rounded_corner_grey);
+        views.setTextColor(R.id.keyTextView, context.getResources().getColor(R.color.white));
+        views.setTextColor(R.id.valueTextView, context.getResources().getColor(R.color.white));
+        views.setTextViewText(R.id.valueTextView, "No data available");
+        views.setTextViewText(R.id.keyTextView, "Connection lost");
+        views.setTextViewText(R.id.valuedateTextView, "");
+
+        // Instrukce pro aktualizaci widgetu
+        AppWidgetManager.getInstance(context).updateAppWidget(appWidgetId, views);
     }
     public static String convertToClassicTime(String inputDate) {
         String outputDate = "";
@@ -227,7 +270,7 @@ public class smallWeatherWidget extends AppWidgetProvider {
             if (appWidgetId != AppWidgetManager.INVALID_APPWIDGET_ID && selectedKey != null) {
                 // Aktualizovat widget s vybraným klíčem
                 AppWidgetManager appWidgetManager = AppWidgetManager.getInstance(context);
-                onUpdate_small(context, appWidgetManager, new int[]{appWidgetId});
+                onUpdate(context, appWidgetManager, new int[]{appWidgetId});
             }
         }
     }
@@ -331,7 +374,6 @@ public class smallWeatherWidget extends AppWidgetProvider {
                     // Zpracování odpovědi
                     int responseCode = connection.getResponseCode();
                     if (responseCode == HttpURLConnection.HTTP_OK) {
-                        //System.out.println("Login successful!");
                         // Pokud je odpověď 200, zpracujeme access_token a uložíme ho do SharedPreferences
                         InputStream inputStream = connection.getInputStream();
                         BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream));

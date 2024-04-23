@@ -6,10 +6,10 @@
     android:initialLayout="@layout/small_weather_widget"
     android:minWidth="110dp"
     android:minHeight="110dp"
-    android:previewImage="@drawable/example_appwidget_preview"
+    android:previewImage="@drawable/small_widget"
     android:resizeMode="none"
     android:previewLayout="@layout/small_weather_widget"
     android:targetCellWidth="1"
     android:targetCellHeight="1"
-    android:updatePeriodMillis="600000"
+    android:updatePeriodMillis="300000"
     android:widgetCategory="home_screen" />

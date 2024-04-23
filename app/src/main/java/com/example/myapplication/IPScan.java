@@ -88,26 +88,19 @@ public class IPScan extends AppCompatActivity {
             checkAndOpenMainActivity();
             //return;
         }
-
-        /*
-        new Handler().postDelayed(new Runnable() {
-            @Override
-            public void run() {
-                getIpAdress();
-            }
-        }, 5000);
-
-         */
-        new Handler().postDelayed(new Runnable() {
-            @Override
-            public void run() {
-                if (!ipAddressFound) {
-                    showManualIpAddressDialog();
+        else{
+            new Handler().postDelayed(new Runnable() {
+                @Override
+                public void run() {
+                    if (!ipAddressFound) {
+                        showManualIpAddressDialog();
+                    }
                 }
-            }
-        }, 10000); // 10 seconds
-        getIpAdress();
-        setupUnitConversion();
+            }, 10000); // 10 seconds
+            getIpAdress();
+            setupUnitConversion();
+        }
+
         listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
@@ -176,7 +169,7 @@ public class IPScan extends AppCompatActivity {
                     (ipAddress >> 16 & 0xff),
                     (ipAddress >> 24 & 0xff)
             );
-            ExecutorService executor = Executors.newFixedThreadPool(50); // Počet vláken můžete upravit podle potřeby
+            ExecutorService executor = Executors.newFixedThreadPool(50); // Počet vláken
             for (int i = 1; i <= 255; i++) {
                 final int finalI = i;
                 executor.execute(new Runnable() {
