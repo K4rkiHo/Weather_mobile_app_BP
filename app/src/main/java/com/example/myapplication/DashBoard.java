@@ -495,7 +495,6 @@ public class DashBoard extends AppCompatActivity {
         @Override
         public void onSwiped(@NonNull RecyclerView.ViewHolder viewHolder, int direction) {
             int position = viewHolder.getAdapterPosition();
-            Toast.makeText(DashBoard.this, "Deleted", Toast.LENGTH_SHORT).show();
         }
     };
 }

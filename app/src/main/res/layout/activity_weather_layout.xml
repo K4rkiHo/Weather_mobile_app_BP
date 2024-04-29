@@ -68,7 +68,7 @@
         android:id="@+id/button"
         android:layout_width="0dp"
         android:layout_height="72dp"
-        android:text="History data"
+        android:text="Historical datetime"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toStartOf="@id/button_calendar"
         app:layout_constraintStart_toStartOf="parent"

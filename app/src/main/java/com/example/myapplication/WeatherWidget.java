@@ -100,19 +100,6 @@ public class WeatherWidget extends AppWidgetProvider {
             views.setTextColor(R.id.valuedateTextView, context.getResources().getColor(R.color.white));
         }
 
-
-        /*
-        // Nastavit OnClickListener pro tlačítko s aktualizací
-        Intent updateIntent = new Intent(context, WeatherWidget.class);
-        updateIntent.setAction("com.example.myapplication.UPDATE_WIDGET");
-        updateIntent.putExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, appWidgetId);
-        updateIntent.putExtra("SELECTED_KEY", selectedKey);
-
-        PendingIntent updatePendingIntent = PendingIntent.getBroadcast(context, appWidgetId, updateIntent, PendingIntent.FLAG_IMMUTABLE);
-        views.setOnClickPendingIntent(R.id.refreshButton, updatePendingIntent);
-
-         */
-
         String translatedValue = "";
         String savedUnit_original = "";
         try {
