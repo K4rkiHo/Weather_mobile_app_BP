@@ -14,4 +14,7 @@ Jan Karkoška 2023/2024
 [Instalace](https://github.com/K4rkiHo/RPi_instalation_script)
 
 ## Snímky výsledné aplikace:
+
+
+
 ![history_data_weekly](https://github.com/K4rkiHo/Bakalarka/assets/93758928/74d7a4db-42ce-4eae-ab89-65272020946f)
