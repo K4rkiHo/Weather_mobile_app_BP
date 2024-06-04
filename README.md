@@ -8,6 +8,6 @@ Jan Karkoška 2023/2024
 
 
 ## API dokumentace:
-https://github.com/K4rkiHo/Weather_API_documentation
+[Dokumentace](https://github.com/K4rkiHo/Weather_API_documentation)
 
 ![history_data_weekly](https://github.com/K4rkiHo/Bakalarka/assets/93758928/74d7a4db-42ce-4eae-ab89-65272020946f)
