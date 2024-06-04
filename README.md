@@ -15,7 +15,7 @@ Jan Karkoška 2023/2024
 
 ## Snímky výsledné aplikace:
 
-
-<img src="https://github.com/K4rkiHo/Weather_mobile_app_BP/blob/master/Screenshots/gifMeteosearch.gif" width="300" />
-
+<div style="text-align: center;">
+  <img src="https://github.com/K4rkiHo/Weather_mobile_app_BP/blob/master/Screenshots/gifMeteosearch.gif" width="300" />
+</div>
 ![history_data_weekly](https://github.com/K4rkiHo/Bakalarka/assets/93758928/74d7a4db-42ce-4eae-ab89-65272020946f)
