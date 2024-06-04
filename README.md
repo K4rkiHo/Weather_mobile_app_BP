@@ -19,6 +19,17 @@ Jan Karkoška 2023/2024
   <img src="https://github.com/K4rkiHo/Weather_mobile_app_BP/blob/master/Screenshots/gifMeteosearch.gif" width="300" />
 </div>
 
+### Hlavní dashboard
 <img src="https://github.com/K4rkiHo/Weather_mobile_app_BP/blob/master/Screenshots/menu_nb_w.jpg" alt="Hlavní dashboard" width="300" />
 
+### Ukázka grafu hodnot z aktuálního dne
+<img src="https://github.com/K4rkiHo/Weather_mobile_app_BP/blob/master/Screenshots/today_weather.jpg" width="300" />
 
+### Ukázka grafu hodnot z historických dat
+<img src="https://github.com/K4rkiHo/Weather_mobile_app_BP/blob/master/Screenshots/history_data_monthly.jpg" width="300" />
+
+### Ukázka velkého widgetu na ploše
+<img src="https://github.com/K4rkiHo/Weather_mobile_app_BP/blob/master/Screenshots/velky_widget.jpg" width="300" />
+
+### Ukázka malého widgetu na ploše
+<img src="https://github.com/K4rkiHo/Weather_mobile_app_BP/blob/master/Screenshots/maly_widget.jpg" width="300" />
