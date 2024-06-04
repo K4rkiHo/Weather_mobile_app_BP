@@ -1,6 +1,6 @@
-Bakalářská práce 
+#Bakalářská práce 
 
-Mobilní aplikace zobrazující počasí z lokální meteostanice
+#Mobilní aplikace zobrazující počasí z lokální meteostanice
 
 Cílem bakalářské práce je zpřístupnění dat o počasí z lokální meteostanice na platformě Android ve formě aplikace a widgetů na ploše. Očekává se autonomní provoz bez nutnosti využití cloudových služeb třetích stran. Aplikace se bude skládat ze serverové a klientské části. Na straně serveru (realizovaného např. na platformě Raspberry Pi) bude data z meteostanice shromažďovat a zpřístupňovat vhodným protokolem (včetně možnosti vyžádat si agregované, minimální a maximální hodnoty resp. historická data) a na straně klienta je vhodným způsobem vizualizovat.
 
